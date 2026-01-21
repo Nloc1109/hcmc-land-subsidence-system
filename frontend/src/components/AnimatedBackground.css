@@ -1,0 +1,210 @@
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Base gradient background */
+.bg-base-gradient {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    #0a0e27 0%,
+    #0f172a 25%,
+    #1a1a2e 50%,
+    #16213e 75%,
+    #0f0f23 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animated stripes - Layer 1: Horizontal */
+.bg-stripes-1 {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(59, 130, 246, 0.08) 2px,
+    rgba(59, 130, 246, 0.08) 4px
+  );
+  background-size: 100% 60px;
+  animation: stripeMove1 15s linear infinite;
+  opacity: 0.6;
+}
+
+/* Animated stripes - Layer 2: Diagonal (45deg) */
+.bg-stripes-2 {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(139, 92, 246, 0.06) 3px,
+    rgba(139, 92, 246, 0.06) 6px
+  );
+  background-size: 80px 80px;
+  animation: stripeMove2 20s linear infinite;
+  opacity: 0.5;
+}
+
+/* Animated stripes - Layer 3: Diagonal (-45deg) */
+.bg-stripes-3 {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    rgba(14, 165, 233, 0.05) 4px,
+    rgba(14, 165, 233, 0.05) 8px
+  );
+  background-size: 100px 100px;
+  animation: stripeMove3 25s linear infinite;
+  opacity: 0.4;
+}
+
+/* Animated stripes - Layer 4: Vertical */
+.bg-stripes-4 {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(59, 130, 246, 0.04) 2px,
+    rgba(59, 130, 246, 0.04) 4px
+  );
+  background-size: 50px 100%;
+  animation: stripeMove4 18s linear infinite;
+  opacity: 0.3;
+}
+
+/* Common stripe styles */
+.bg-stripes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+/* Stripe animations */
+@keyframes stripeMove1 {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(60px);
+  }
+}
+
+@keyframes stripeMove2 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(80px, 80px) rotate(360deg);
+  }
+}
+
+@keyframes stripeMove3 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(-100px, 100px) rotate(-360deg);
+  }
+}
+
+@keyframes stripeMove4 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50px);
+  }
+}
+
+/* Subtle grid overlay */
+.bg-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.3;
+  animation: gridMove 30s linear infinite;
+}
+
+@keyframes gridMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(80px, 80px);
+  }
+}
+
+/* Add blur effect to stripes for more ethereal look */
+.bg-stripes-1,
+.bg-stripes-2,
+.bg-stripes-3,
+.bg-stripes-4 {
+  filter: blur(0.5px);
+  mix-blend-mode: screen;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .bg-stripes-1 {
+    background-size: 100% 40px;
+  }
+  
+  .bg-stripes-2 {
+    background-size: 60px 60px;
+  }
+  
+  .bg-stripes-3 {
+    background-size: 80px 80px;
+  }
+  
+  .bg-stripes-4 {
+    background-size: 40px 100%;
+  }
+  
+  .bg-grid {
+    background-size: 60px 60px;
+  }
+  
+  .bg-stripes-1,
+  .bg-stripes-2,
+  .bg-stripes-3,
+  .bg-stripes-4 {
+    opacity: 0.3;
+  }
+}
+
+/* Performance optimization */
+.animated-background * {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}

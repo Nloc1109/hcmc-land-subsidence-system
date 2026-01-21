@@ -1,0 +1,212 @@
+.home-page {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero Section */
+.hero-section {
+  background: rgba(10, 22, 40, 0.3);
+  padding: 100px 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(2px);
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  color: #ffffff !important;
+  font-size: 56px !important;
+  font-weight: 800;
+  margin-bottom: 20px !important;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  color: #3b82f6 !important;
+  font-size: 36px !important;
+  font-weight: 600;
+  margin-bottom: 24px !important;
+  letter-spacing: -0.02em;
+}
+
+.hero-description {
+  color: #d1d5db;
+  font-size: 18px;
+  line-height: 1.8;
+  margin-bottom: 32px;
+  font-weight: 400;
+}
+
+.hero-actions {
+  margin-top: 40px;
+}
+
+/* Stats Section */
+.stats-section {
+  padding: 60px 0;
+}
+
+.section-title {
+  color: #ffffff !important;
+  text-align: center;
+  margin-bottom: 40px !important;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
+  border: 1px solid rgba(30, 41, 59, 0.8) !important;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.stat-card:hover {
+  border-color: #3b82f6 !important;
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+}
+
+.stat-card .ant-statistic-title {
+  color: #d1d5db;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-card .ant-statistic-content {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.stat-card .anticon {
+  color: #3b82f6;
+  font-size: 28px;
+  margin-right: 8px;
+}
+
+/* Features Section */
+.features-section {
+  padding: 80px 0;
+  background: rgba(10, 15, 39, 0.2);
+  position: relative;
+  backdrop-filter: blur(2px);
+}
+
+.feature-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
+  border: 1px solid rgba(30, 41, 59, 0.8) !important;
+  border-radius: 12px;
+  height: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.feature-card:hover {
+  border-color: #3b82f6 !important;
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+}
+
+.feature-icon {
+  font-size: 52px;
+  color: #3b82f6;
+  margin-bottom: 20px;
+}
+
+.feature-card .ant-typography h4 {
+  color: #ffffff !important;
+  margin-bottom: 12px !important;
+}
+
+.feature-card .ant-typography p {
+  color: #d1d5db;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* CTA Section */
+.cta-section {
+  padding: 60px 0;
+}
+
+.cta-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 16px;
+  text-align: center;
+  padding: 48px !important;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-card .ant-typography h2 {
+  color: #ffffff !important;
+  margin-bottom: 16px !important;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card .ant-typography p {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card .ant-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card .ant-typography p {
+  color: #d1d5db;
+  font-size: 17px;
+  margin-bottom: 24px;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 32px !important;
+  }
+
+  .hero-subtitle {
+    font-size: 24px !important;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
+  .stats-section,
+  .features-section,
+  .cta-section {
+    padding: 40px 0;
+  }
+}
