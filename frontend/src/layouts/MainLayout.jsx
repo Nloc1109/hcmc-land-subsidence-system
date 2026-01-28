@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Space } from 'antd';
-import { HomeOutlined, LoginOutlined, UserAddOutlined, LogoutOutlined } from '@ant-design/icons';
+import { HomeOutlined, DashboardOutlined, LoginOutlined, UserAddOutlined, LogoutOutlined } from '@ant-design/icons';
 import './MainLayout.css';
 
 const { Header, Content, Footer } = Layout;
@@ -14,6 +14,11 @@ const MainLayout = () => {
       key: '/',
       icon: <HomeOutlined />,
       label: 'Trang chủ',
+    },
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
     },
   ];
 
@@ -38,7 +43,7 @@ const MainLayout = () => {
           </div>
           <div className="header-right">
             <Menu
-              theme="dark"
+              theme="light"
               mode="horizontal"
               selectedKeys={[location.pathname]}
               items={menuItems}
