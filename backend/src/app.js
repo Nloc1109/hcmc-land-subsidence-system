@@ -1,15 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const dotenv = require('dotenv');
-const OpenAI = require('openai');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+import OpenAI from 'openai';
+
+import { getPool } from './db/mssql.js';
+import authRouter from './routes/auth.js';
 
 dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
 app.use(
@@ -22,9 +25,27 @@ app.use(helmet());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+// Auth routes
+app.use('/api/v1/auth', authRouter);
+
+// Health check (giữ lại cả endpoint cũ lẫn mới nếu cần về sau)
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'hcmc-land-subsidence-backend' });
+});
+
+// DB connectivity test (Windows Authentication)
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query('SELECT DB_NAME() AS dbName, GETDATE() AS serverTime;');
+    res.json({ ok: true, rows: result.recordset });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      message: 'DB connection failed',
+      error: String(err?.message || err),
+    });
+  }
 });
 
 /**
@@ -107,6 +128,6 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`Backend server listening on http://localhost:${PORT}`);
+  console.log(`Backend listening on http://localhost:${PORT}`);
 });
 
