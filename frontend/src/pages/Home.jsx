@@ -27,7 +27,10 @@ import {
   BellOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  NotificationOutlined,
+  SearchOutlined,
+  RobotOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -167,20 +170,94 @@ const HomePage = () => {
             <Button 
               type="primary" 
               size="large"
-              icon={<DashboardOutlined />}
-              onClick={() => navigate('/monitoring')}
-            >
-              Xem bản đồ giám sát
-            </Button>
-            <Button 
-              size="large"
               icon={<BarChartOutlined />}
               onClick={() => navigate('/reports')}
             >
-              Xem báo cáo
+              Xem báo cáo tổng quan
+            </Button>
+            <Button 
+              size="large"
+              icon={<RobotOutlined />}
+              onClick={() => navigate('/ai-prediction')}
+            >
+              AI dự đoán thiên tai
             </Button>
           </Space>
         </div>
+      </section>
+
+      {/* Navigation Section for main modules */}
+      <section className="nav-modules-section">
+        <div className="section-header">
+          <Title level={2} className="section-title">
+            Điều hướng nhanh các mô-đun
+          </Title>
+          <Text className="section-subtitle">
+            Chọn nhanh chức năng bạn muốn sử dụng sau khi đăng nhập hệ thống.
+          </Text>
+        </div>
+        <Row gutter={[24, 24]}>
+          <Col xs={24} md={12} lg={6}>
+            <Card
+              hoverable
+              className="nav-module-card"
+              onClick={() => navigate('/reports')}
+            >
+              <div className="nav-module-icon nav-module-icon-primary">
+                <BarChartOutlined />
+              </div>
+              <Title level={4}>Báo cáo</Title>
+              <Paragraph type="secondary">
+                Xem thống kê, biểu đồ và báo cáo chi tiết theo khu vực, thời gian và chỉ số.
+              </Paragraph>
+            </Card>
+          </Col>
+          <Col xs={24} md={12} lg={6}>
+            <Card
+              hoverable
+              className="nav-module-card"
+              onClick={() => navigate('/news')}
+            >
+              <div className="nav-module-icon nav-module-icon-info">
+                <NotificationOutlined />
+              </div>
+              <Title level={4}>Tin tức</Title>
+              <Paragraph type="secondary">
+                Cập nhật nhanh các tin tức, khuyến nghị và thông báo liên quan đến sụt lún.
+              </Paragraph>
+            </Card>
+          </Col>
+          <Col xs={24} md={12} lg={6}>
+            <Card
+              hoverable
+              className="nav-module-card"
+              onClick={() => navigate('/diagnosis')}
+            >
+              <div className="nav-module-icon nav-module-icon-warning">
+                <SearchOutlined />
+              </div>
+              <Title level={4}>Chuẩn đoán</Title>
+              <Paragraph type="secondary">
+                Đánh giá nhanh mức độ rủi ro của từng khu vực dựa trên dữ liệu quan trắc.
+              </Paragraph>
+            </Card>
+          </Col>
+          <Col xs={24} md={12} lg={6}>
+            <Card
+              hoverable
+              className="nav-module-card"
+              onClick={() => navigate('/ai-prediction')}
+            >
+              <div className="nav-module-icon nav-module-icon-success">
+                <RobotOutlined />
+              </div>
+              <Title level={4}>AI dự đoán thiên tai</Title>
+              <Paragraph type="secondary">
+                Truy cập mô-đun AI để xem dự đoán nguy cơ thiên tai theo khu vực.
+              </Paragraph>
+            </Card>
+          </Col>
+        </Row>
       </section>
 
       {/* Statistics Section */}

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/auth/useAuthStore';
 import './Auth.css';
 
 const { Title, Text } = Typography;
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -18,8 +20,12 @@ const LoginPage = () => {
       console.log('Login values:', values);
       
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      login({
+        username: values.username,
+        role: 'Quản trị viên',
+      });
       message.success('Đăng nhập thành công!');
       navigate('/');
     } catch (error) {
