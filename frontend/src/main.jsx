@@ -5,25 +5,34 @@ import viVN from 'antd/locale/vi_VN';
 import App from './App';
 import './styles/index.css';
 
-// Theme gradient tối với màu hiện đại
-const darkTheme = {
-  algorithm: theme.darkAlgorithm,
+// Theme sáng "đất/cát" + xanh nước cho hệ thống quản lý sụt lún đất
+const lightTheme = {
+  algorithm: theme.defaultAlgorithm,
   token: {
-    colorPrimary: '#3b82f6',
-    colorBgBase: '#0a0e27',
-    colorText: '#ffffff',
-    colorTextSecondary: '#d1d5db',
-    colorBorder: '#1e293b',
-    colorBgContainer: '#0f172a',
-    colorBgElevated: '#1e293b',
-    borderRadius: 8,
+    // Brand / CTA
+    colorPrimary: '#2563eb',
+
+    // Surfaces (không trắng gắt)
+    colorBgBase: '#f5ede8',
+    colorBgContainer: '#f7f0ea',
+    colorBgElevated: '#f7f0ea',
+
+    // Text
+    colorText: '#0f172a',
+    colorTextSecondary: '#475569',
+
+    // Borders
+    colorBorder: '#d4c4b8',
+
+    // Shape / typography
+    borderRadius: 12,
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ConfigProvider theme={darkTheme} locale={viVN}>
+    <ConfigProvider theme={lightTheme} locale={viVN}>
       <App />
     </ConfigProvider>
   </React.StrictMode>

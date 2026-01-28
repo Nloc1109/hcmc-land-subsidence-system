@@ -6,17 +6,22 @@
 }
 
 :root {
-  --bg-primary: #0a0e27;
-  --bg-secondary: #0f172a;
-  --bg-elevated: #1e293b;
-  --bg-gradient-start: #0a1628;
-  --bg-gradient-mid: #1a1a2e;
-  --bg-gradient-end: #0f0f23;
-  --text-primary: #ffffff;
-  --text-secondary: #d1d5db;
-  --border-color: #1e293b;
-  --accent-color: #3b82f6;
-  --accent-hover: #60a5fa;
+  /* Earthy + clean palette (đất/cát + xanh nước) */
+  --bg-primary: #f5ede8; /* nền cát nhạt */
+  --bg-secondary: #f0e8e0; /* nền phụ hơi đậm */
+  --bg-elevated: #f7f0ea; /* surface/card */
+  --bg-gradient-start: #f5ede8;
+  --bg-gradient-mid: #f0e8e0;
+  --bg-gradient-end: #ebe4dd;
+
+  --text-primary: #0f172a; /* chữ chính đậm rõ */
+  --text-secondary: #475569; /* chữ phụ */
+
+  --border-color: #d4c4b8; /* viền ấm */
+
+  --accent-color: #2563eb; /* xanh nước nổi bật cho CTA */
+  --accent-hover: #1d4ed8;
+  --accent-earth: #b45309; /* cam đất */
 }
 
 body {
@@ -52,12 +57,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: #cbb9ac;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+  background: #bfa899;
 }
 
 /* Ant Design overrides */
@@ -67,9 +72,10 @@ body {
 }
 
 .ant-layout-header {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%) !important;
+  background: rgba(245, 237, 232, 0.92) !important;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .ant-layout-content {
@@ -80,9 +86,20 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 p {
   letter-spacing: -0.01em;
   line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Links */
+a {
+  color: var(--accent-color);
+}
+
+a:hover {
+  color: var(--accent-hover);
 }
