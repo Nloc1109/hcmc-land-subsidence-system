@@ -1,9 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Op } from 'sequelize';
-import { User } from '../models/User.js';
-import { Role } from '../models/Role.js';
+import { getPool } from '../db/mssql.js';
 
 const router = express.Router();
 
@@ -22,18 +20,29 @@ function generateToken(user) {
   );
 }
 
+// Helper: map bản ghi User + Role thành object an toàn cho frontend
+function mapUserRow(row) {
+  return {
+    id: row.UserId,
+    username: row.Username,
+    fullName: row.FullName,
+    email: row.Email,
+    phoneNumber: row.PhoneNumber,
+    role: row.RoleName || row.roleName || 'User',
+  };
+}
+
 // Lấy danh sách role cho màn hình đăng ký (ẩn Admin)
 router.get('/roles', async (req, res) => {
   try {
-    const roles = await Role.findAll({
-      where: {
-        IsActive: true,
-        RoleName: { [Op.ne]: 'Admin' },
-      },
-      attributes: ['RoleId', 'RoleName', 'Description'],
-      order: [['RoleId', 'ASC']],
-    });
-    return res.json({ roles });
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .query(
+        "SELECT RoleId, RoleName, Description FROM Roles WHERE IsActive = 1 AND RoleName <> 'Admin' ORDER BY RoleId ASC"
+      );
+
+    return res.json({ roles: result.recordset });
   } catch (err) {
     console.error('Get roles error:', err);
     return res.status(500).json({ message: 'Lỗi máy chủ khi lấy danh sách vai trò' });
@@ -49,62 +58,71 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
     }
 
-    const existing = await User.findOne({
-      where: {
-        [Op.or]: [{ Username: username }, { Email: email }],
-      },
-    });
-    if (existing) {
+    const pool = await getPool();
+    const request = pool.request();
+
+    // Kiểm tra trùng username/email
+    request.input('Username', username);
+    request.input('Email', email);
+    let result = await request.query(
+      'SELECT TOP 1 * FROM Users WHERE Username = @Username OR Email = @Email'
+    );
+    if (result.recordset.length > 0) {
       return res.status(400).json({ message: 'Tên đăng nhập hoặc email đã được sử dụng' });
     }
 
     // Xác định role theo lựa chọn, nhưng không cho phép Admin
-    let roleWhere = {
-      IsActive: true,
-      RoleName: { [Op.ne]: 'Admin' },
-    };
-
+    let roleWhere = "IsActive = 1 AND RoleName <> 'Admin'";
+    const roleReq = pool.request();
     if (roleId) {
-      roleWhere = { ...roleWhere, RoleId: roleId };
+      roleReq.input('RoleId', roleId);
+      roleWhere += ' AND RoleId = @RoleId';
     } else if (roleName) {
-      roleWhere = { ...roleWhere, RoleName: roleName };
+      roleReq.input('RoleName', roleName);
+      roleWhere += ' AND RoleName = @RoleName';
     }
 
-    let role = await Role.findOne({ where: roleWhere });
+    result = await roleReq.query(`SELECT TOP 1 * FROM Roles WHERE ${roleWhere}`);
+    let roleRow = result.recordset[0];
 
-    // Nếu không tìm thấy (ví dụ user cố tình gửi Admin hoặc role sai) → fallback Viewer/User
-    if (!role) {
-      role = await Role.findOne({ where: { RoleName: 'Viewer', IsActive: true } });
-      if (!role) {
-        role =
-          (await Role.findOne({ where: { RoleName: 'User', IsActive: true } })) ||
-          (await Role.findOne({
-            // Chỉ dùng Admin làm fallback cuối cùng nếu bắt buộc
-            where: { RoleName: 'Admin', IsActive: true },
-          }));
+    // Nếu không tìm thấy → fallback Viewer/User/Admin như logic cũ
+    if (!roleRow) {
+      const fallbackNames = ['Viewer', 'User', 'Admin'];
+      for (const name of fallbackNames) {
+        // eslint-disable-next-line no-await-in-loop
+        const fb = await pool
+          .request()
+          .input('Name', name)
+          .query('SELECT TOP 1 * FROM Roles WHERE RoleName = @Name AND IsActive = 1');
+        if (fb.recordset[0]) {
+          roleRow = fb.recordset[0];
+          break;
+        }
       }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      Username: username,
-      Email: email,
-      PasswordHash: passwordHash,
-      FullName: fullName,
-      PhoneNumber: phoneNumber || null,
-      RoleId: role ? role.RoleId : 1,
-      IsActive: true,
-    });
 
-    const token = generateToken({ ...user.get(), roleName: role?.RoleName || 'User' });
-    const safeUser = {
-      id: user.UserId,
-      username: user.Username,
-      fullName: user.FullName,
-      email: user.Email,
-      phoneNumber: user.PhoneNumber,
-      role: role?.RoleName || 'User',
-    };
+    // Chèn user mới
+    const insertReq = pool.request();
+    insertReq.input('Username', username);
+    insertReq.input('Email', email);
+    insertReq.input('PasswordHash', passwordHash);
+    insertReq.input('FullName', fullName);
+    insertReq.input('PhoneNumber', phoneNumber || null);
+    insertReq.input('RoleId', roleRow ? roleRow.RoleId : 1);
+
+    const insertResult = await insertReq.query(
+      `INSERT INTO Users (Username, Email, PasswordHash, FullName, PhoneNumber, RoleId, IsActive)
+       OUTPUT INSERTED.*
+       VALUES (@Username, @Email, @PasswordHash, @FullName, @PhoneNumber, @RoleId, 1);`
+    );
+
+    const userRow = insertResult.recordset[0];
+    const userWithRole = { ...userRow, roleName: roleRow?.RoleName || 'User' };
+
+    const token = generateToken(userWithRole);
+    const safeUser = mapUserRow({ ...userRow, RoleName: roleRow?.RoleName || 'User' });
 
     return res.status(201).json({
       message: 'Đăng ký thành công',
@@ -129,30 +147,37 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Vui lòng nhập mật khẩu!' });
     }
 
-    const where = { [Op.or]: [] };
-    if (username) where[Op.or].push({ Username: username });
-    if (email) where[Op.or].push({ Email: email });
+    const pool = await getPool();
+    const request = pool.request();
+    if (username) request.input('Username', username);
+    if (email) request.input('Email', email);
 
-    const user = await User.findOne({ where });
-    if (!user) {
+    const whereParts = [];
+    if (username) whereParts.push('Username = @Username');
+    if (email) whereParts.push('Email = @Email');
+    const whereClause = whereParts.join(' OR ');
+
+    let result = await request.query(`SELECT TOP 1 * FROM Users WHERE ${whereClause}`);
+    const userRow = result.recordset[0];
+    if (!userRow) {
       return res.status(401).json({ message: 'Sai tài khoản hoặc mật khẩu' });
     }
 
-    const ok = await bcrypt.compare(String(password), user.PasswordHash);
+    const ok = await bcrypt.compare(String(password), userRow.PasswordHash);
     if (!ok) {
       return res.status(401).json({ message: 'Sai tài khoản hoặc mật khẩu' });
     }
 
-    const role = await Role.findOne({ where: { RoleId: user.RoleId } });
-    const token = generateToken({ ...user.get(), roleName: role?.RoleName || 'User' });
-    const safeUser = {
-      id: user.UserId,
-      username: user.Username,
-      fullName: user.FullName,
-      email: user.Email,
-      phoneNumber: user.PhoneNumber,
-      role: role?.RoleName || 'User',
-    };
+    // Lấy role
+    result = await pool
+      .request()
+      .input('RoleId', userRow.RoleId)
+      .query('SELECT TOP 1 * FROM Roles WHERE RoleId = @RoleId');
+    const roleRow = result.recordset[0];
+
+    const userWithRole = { ...userRow, roleName: roleRow?.RoleName || 'User' };
+    const token = generateToken(userWithRole);
+    const safeUser = mapUserRow({ ...userRow, RoleName: roleRow?.RoleName || 'User' });
 
     return res.json({
       message: 'Đăng nhập thành công',
@@ -174,25 +199,29 @@ router.get('/me', async (req, res) => {
   }
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(payload.sub);
-    if (!user) {
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input('UserId', payload.sub)
+      .query(
+        `SELECT u.*, r.RoleName
+         FROM Users u
+         LEFT JOIN Roles r ON r.RoleId = u.RoleId
+         WHERE u.UserId = @UserId`
+      );
+
+    const row = result.recordset[0];
+    if (!row) {
       return res.status(401).json({ message: 'Token không hợp lệ' });
     }
-    const role = await Role.findOne({ where: { RoleId: user.RoleId } });
-    const safeUser = {
-      id: user.UserId,
-      username: user.Username,
-      fullName: user.FullName,
-      email: user.Email,
-      phoneNumber: user.PhoneNumber,
-      role: role?.RoleName || 'User',
-    };
+
+    const safeUser = mapUserRow(row);
     return res.json({ user: safeUser });
   } catch (err) {
+    console.error('Me error:', err);
     return res.status(401).json({ message: 'Token không hợp lệ' });
   }
 });
 
 export default router;
-
 

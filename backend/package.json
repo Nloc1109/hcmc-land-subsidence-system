@@ -9,6 +9,7 @@
     "dev": "nodemon src/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:db": "node src/test-db-connection.js",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "seed": "sequelize-cli db:seed:all",

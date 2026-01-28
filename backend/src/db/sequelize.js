@@ -3,20 +3,40 @@ import { Sequelize } from 'sequelize';
 
 dotenv.config();
 
-const DB_HOST = process.env.DB_HOST || '21AK22-COM';
+const DB_HOST = process.env.DB_HOST || 'DESKTOP-QH7JC2G';
 const DB_NAME = process.env.DB_NAME || 'HCMC_LandSubsidence';
 const DB_USER = process.env.DB_USER || 'sa';
 const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_INSTANCE = process.env.DB_INSTANCE; // Named instance như SQLEXPRESS, LOC1109
+const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined;
 
+// Xây dựng host và options cho Sequelize
+// Lưu ý: Sequelize xử lý port và instance name riêng biệt
+const dialectOptions = {
+  options: {
+    encrypt: false,
+    trustServerCertificate: process.env.DB_TRUST_SERVER_CERT === 'true' || true,
+    enableArithAbort: true,
+  },
+};
+
+// Nếu dùng named instance (không có port), thêm instanceName
+if (DB_INSTANCE && !DB_PORT) {
+  dialectOptions.options.instanceName = DB_INSTANCE;
+}
+
+// SQL Server Authentication - đơn giản và ổn định
 export const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
+  ...(DB_PORT ? { port: DB_PORT } : {}), // Thêm port nếu có
   dialect: 'mssql',
-  dialectOptions: {
-    options: {
-      encrypt: false,
-      trustServerCertificate: true,
-    },
-  },
+  dialectOptions,
   logging: false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
 });
 
