@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
+import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
+import authApi from '../../api/auth';
 import './Auth.css';
 
 const { Title, Text } = Typography;
@@ -14,16 +15,24 @@ const LoginPage = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // TODO: Gọi API đăng nhập
-      console.log('Login values:', values);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const payload = {
+        username: values.username,
+        password: values.password,
+      };
+
+      const data = await authApi.login(payload);
+      // Lưu token tạm thời vào localStorage để các trang khác có thể dùng
+      if (data?.token) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+      }
+
       message.success('Đăng nhập thành công!');
-      navigate('/');
+      // Sau khi đăng nhập có thể điều hướng thẳng vào dashboard
+      navigate('/dashboard');
     } catch (error) {
-      message.error('Đăng nhập thất bại. Vui lòng thử lại.');
+      const msg = error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.';
+      message.error(msg);
     } finally {
       setLoading(false);
     }
