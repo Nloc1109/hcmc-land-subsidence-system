@@ -1,0 +1,16 @@
+.diagnosis-page {
+  padding: 72px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.diagnosis-header {
+  margin-bottom: 32px;
+}
+
+.diagnosis-card {
+  background: #f5f7fa !important;
+  border-radius: 20px;
+  border: 1px solid #b8c5d1 !important;
+}
+

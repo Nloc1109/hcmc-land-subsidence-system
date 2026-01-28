@@ -1,0 +1,80 @@
+.reports-page {
+  padding: 72px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reports-header {
+  margin-bottom: 32px;
+}
+
+.reports-header .ant-typography h2 {
+  color: #1e293b !important;
+  font-weight: 800;
+}
+
+.reports-header .ant-typography p {
+  color: #64748b;
+}
+
+.reports-card {
+  background: #f5f7fa !important;
+  border-radius: 20px;
+  border: 1px solid #b8c5d1 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.reports-district-section {
+  margin-top: 40px;
+}
+
+.reports-district-section .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.district-card {
+  margin-bottom: 24px;
+}
+
+.district-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.district-name {
+  font-weight: 600;
+}
+
+.district-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.district-progress {
+  margin-bottom: 16px;
+}
+
+.wards-list .ant-list-header,
+.wards-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1.2fr;
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+}
+
+.ward-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1.2fr;
+  font-size: 13px;
+}
+
+.ward-name {
+  font-weight: 500;
+}
+
