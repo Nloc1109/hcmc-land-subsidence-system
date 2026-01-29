@@ -3,7 +3,6 @@ import { Layout } from 'antd';
 import AnimatedBackground from './components/AnimatedBackground';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/Home';
-import Dashboard from './pages/dashboard/Dashboard';
 import LoginPage from './pages/auth/Login';
 import RegisterPage from './pages/auth/Register';
 import ReportsPage from './pages/reports/Reports';
@@ -24,7 +23,6 @@ function App() {
         {/* Protected routes với layout (giả định đã đăng nhập để xử lý giao diện) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="dashboard" element={<Dashboard />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="news" element={<NewsPage />} />
           <Route path="diagnosis" element={<DiagnosisPage />} />

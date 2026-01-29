@@ -6,8 +6,8 @@ const { Title, Paragraph, Text } = Typography;
 
 const DiagnosisPage = () => {
   return (
-    <div className="diagnosis-page">
-      <div className="diagnosis-header">
+    <div className="page-container">
+      <div className="page-header">
         <Title level={2}>
           <SearchOutlined /> Chuẩn đoán khu vực
         </Title>
@@ -18,7 +18,7 @@ const DiagnosisPage = () => {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={14}>
-          <Card className="diagnosis-card" title="Quy trình chuẩn đoán">
+          <Card className="page-card" title="Quy trình chuẩn đoán">
             <Steps
               direction="vertical"
               items={[
@@ -39,7 +39,7 @@ const DiagnosisPage = () => {
           </Card>
         </Col>
         <Col xs={24} md={10}>
-          <Card className="diagnosis-card" title="Trạng thái chung">
+          <Card className="page-card" title="Trạng thái chung">
             <Paragraph>
               <AlertOutlined style={{ color: '#f59e0b', marginRight: 8 }} />
               <Text strong>Mô-đun chuẩn đoán đang trong giai đoạn thiết kế logic xử lý.</Text>

@@ -70,7 +70,16 @@ const MainLayout = () => {
     <Layout className="main-layout">
       <Header className="main-header">
         <div className="header-content">
-          <div className="logo">
+          <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
+              onError={(e) => {
+                // Fallback nếu logo chưa có
+                e.target.style.display = 'none';
+              }}
+            />
             <h1>HCM Land Subsidence</h1>
           </div>
           <div className="header-right">
