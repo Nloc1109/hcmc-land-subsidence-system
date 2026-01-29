@@ -6,6 +6,19 @@ import './News.css';
 
 const { Title, Paragraph, Text } = Typography;
 
+// Chỉ hiển thị link khi URL hợp lệ (http/https và không phải placeholder)
+const isValidNewsUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  try {
+    const u = new URL(trimmed);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const NewsPage = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +30,13 @@ const NewsPage = () => {
         setLoading(true);
         setError(null);
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-        const res = await axios.get(`${baseUrl}/news/subsidence`);
+        const res = await axios.get(`${baseUrl}/news/subsidence`, {
+          timeout: 90000, // 90 giây timeout cho AI generation
+        });
         setItems(res.data.items || []);
+        if (res.data.processingTime) {
+          console.log(`⏱️ Thời gian xử lý: ${res.data.processingTime}`);
+        }
       } catch (err) {
         console.error('Failed to load subsidence news:', err);
         setError('Không tải được tin tức từ server. Vui lòng thử lại sau.');
@@ -31,8 +49,8 @@ const NewsPage = () => {
   }, []);
 
   return (
-    <div className="news-page">
-      <div className="news-header">
+    <div className="page-container">
+      <div className="page-header">
         <Title level={2}>
           <NotificationOutlined /> Tin tức & thông báo
         </Title>
@@ -41,8 +59,15 @@ const NewsPage = () => {
         </Paragraph>
       </div>
 
-      <Card className="news-card">
-        {loading && <Spin tip="Đang tải tin tức sụt lún..." />}
+      <Card className="page-card">
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Spin size="large" tip="Đang tải tin tức..." />
+            <Paragraph type="secondary" style={{ marginTop: 16 }}>
+              Đang tải các bản tin mới nhất về sụt lún đất
+            </Paragraph>
+          </div>
+        )}
         {!loading && error && (
           <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
         )}
@@ -71,16 +96,28 @@ const NewsPage = () => {
                       </Text>
                       <br />
                       <Text>{item.summary}</Text>
-                      {item.url && (
+                      {isValidNewsUrl(item.url) && (
                         <>
                           <br />
                           <a
-                            href={item.url}
+                            href={item.url.trim()}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ marginTop: 4, display: 'inline-block' }}
+                            style={{
+                              marginTop: 8,
+                              display: 'inline-block',
+                              color: '#1890ff',
+                              fontWeight: 500,
+                              textDecoration: 'none',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.textDecoration = 'underline';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.textDecoration = 'none';
+                            }}
                           >
-                            Xem bài báo gốc
+                            🔗 Xem bài báo gốc
                           </a>
                         </>
                       )}
