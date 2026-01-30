@@ -79,12 +79,19 @@ async function main() {
   }
   console.log(`   Host String (Sequelize): ${sequelizeHost}${process.env.DB_INSTANCE && !process.env.DB_PORT ? ` (instanceName: ${process.env.DB_INSTANCE})` : ''}\n`);
 
-  const mssqlOk = await testMssqlConnection();
+  // Test Sequelize trước, đóng pool, rồi test mssql (chỉ 1 kết nối tại một thời điểm)
   const sequelizeOk = await testSequelizeConnection();
+  try {
+    await sequelize.close();
+  } catch (_) {
+    // ignore
+  }
+
+  const mssqlOk = await testMssqlConnection();
 
   console.log('\n📊 Summary:');
-  console.log(`   mssql (getPool): ${mssqlOk ? '✅ OK' : '❌ FAILED'}`);
   console.log(`   Sequelize: ${sequelizeOk ? '✅ OK' : '❌ FAILED'}`);
+  console.log(`   mssql (getPool): ${mssqlOk ? '✅ OK' : '❌ FAILED'}`);
 
   if (mssqlOk && sequelizeOk) {
     console.log('\n🎉 All database connections are working!');

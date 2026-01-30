@@ -5,6 +5,10 @@ node_modules/
 .env
 .env.local
 
+# Connection config (mỗi người giữ bản riêng, không push để tránh ghi đè)
+src/db/mssql.js
+src/db/sequelize.js
+
 # Logs
 logs/
 *.log
