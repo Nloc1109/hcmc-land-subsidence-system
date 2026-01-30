@@ -126,6 +126,109 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
   }
 });
 
+/**
+ * POST /api/ai/predict
+ * Dự đoán thiên tai theo khu vực (quận/huyện TP.HCM) bằng OpenAI.
+ * Body: { area: string }
+ */
+app.post('/api/ai/predict', async (req, res) => {
+  try {
+    if (!openaiClient) {
+      return res.status(500).json({
+        message: 'OPENAI_API_KEY chưa cấu hình. Không thể thực hiện dự đoán.',
+      });
+    }
+
+    const { area } = req.body || {};
+    if (!area || typeof area !== 'string') {
+      return res.status(400).json({ message: 'Thiếu tham số area (tên khu vực).' });
+    }
+
+    const completion = await openaiClient.chat.completions.create({
+      model: 'gpt-4.1',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Bạn là hệ thống AI dự đoán thiên tai và rủi ro sụt lún cho các khu vực tại TP.HCM. Trả về DUY NHẤT một JSON object đúng cú pháp, không thêm text ngoài JSON.',
+        },
+        {
+          role: 'user',
+          content: `
+Dự đoán thiên tai và rủi ro sụt lún cho khu vực: "${area}" (TP.HCM).
+
+TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có đúng cấu trúc sau (tiếng Việt):
+
+{
+  "area": "${area}",
+  "analysisDate": "YYYY-MM-DD",
+  "predictions": {
+    "oneYear": {
+      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
+      "summary": "Đoạn tóm tắt 2-3 câu về rủi ro 1 năm tới.",
+      "disasters": [
+        {
+          "type": "Tên loại thiên tai (vd: Sụt lún nền, Ngập úng, ...)",
+          "probability": "Thấp | Trung bình | Cao",
+          "severity": "Nhẹ | Trung bình | Nghiêm trọng | Rất nghiêm trọng",
+          "description": "Mô tả ngắn.",
+          "affectedAreas": "Khu vực ảnh hưởng.",
+          "preventionMeasures": "Biện pháp phòng ngừa."
+        }
+      ]
+    },
+    "twoYears": {
+      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
+      "summary": "Đoạn tóm tắt 2-3 câu về rủi ro 2 năm tới.",
+      "disasters": [ ... cùng cấu trúc như oneYear.disasters, ít nhất 2 phần tử ]
+    },
+    "fiveYears": {
+      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
+      "summary": "Đoạn tóm tắt 2-3 câu về rủi ro 5 năm tới.",
+      "disasters": [ ... cùng cấu trúc, ít nhất 2 phần tử ]
+    }
+  },
+  "recommendations": [
+    "Khuyến nghị 1 (câu đầy đủ).",
+    "Khuyến nghị 2.",
+    "Khuyến nghị 3."
+  ]
+}
+
+- Mỗi disasters có ít nhất 2 phần tử. overallRisk, probability, severity dùng đúng một trong các giá trị đã liệt kê.
+- recommendations là mảng 3-5 câu tiếng Việt.
+`.trim(),
+        },
+      ],
+    });
+
+    const raw = completion.choices[0]?.message?.content;
+    if (!raw) {
+      return res.status(500).json({ message: 'OpenAI không trả về nội dung.' });
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed.predictions || !parsed.predictions.oneYear || !parsed.predictions.twoYears || !parsed.predictions.fiveYears) {
+      return res.status(500).json({
+        message: 'Định dạng JSON từ OpenAI thiếu predictions.oneYear/twoYears/fiveYears.',
+      });
+    }
+
+    res.json({
+      area: parsed.area || area,
+      analysisDate: parsed.analysisDate || new Date().toISOString().split('T')[0],
+      predictions: parsed.predictions,
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+    });
+  } catch (error) {
+    console.error('Error in /api/ai/predict:', error);
+    res.status(500).json({
+      message: error?.message || 'Không thể thực hiện dự đoán. Vui lòng thử lại sau.',
+    });
+  }
+});
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Backend listening on http://localhost:${PORT}`);
