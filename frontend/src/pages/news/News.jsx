@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Typography, Card, List, Tag, Spin, Alert } from 'antd';
-import { NotificationOutlined } from '@ant-design/icons';
+import { useEffect, useState, useRef } from 'react';
+import { Typography, Card, List, Tag, Spin, Alert, Button } from 'antd';
+import { NotificationOutlined, ReloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { getNewsCache, setNewsCache, mergeNewsItems } from '../../utils/helpers/newsCache';
 import './News.css';
 
 const { Title, Paragraph, Text } = Typography;
 
-// Chỉ hiển thị link khi URL hợp lệ (http/https và không phải placeholder)
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20];
+const DEFAULT_PAGE_SIZE = 10;
+
 const isValidNewsUrl = (url) => {
   if (!url || typeof url !== 'string') return false;
   const trimmed = url.trim();
@@ -23,40 +26,119 @@ const NewsPage = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloading, setReloading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const mounted = useRef(true);
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+  const loadFromCacheOnly = () => {
+    const cache = getNewsCache();
+    if (cache?.items?.length) {
+      setItems(cache.items);
+      setError(null);
+      return true;
+    }
+    return false;
+  };
+
+  const fetchNews = async (incremental = false) => {
+    const cache = getNewsCache();
+    if (incremental && cache?.items?.length) {
+      try {
+        const res = await axios.get(`${baseUrl}/news/subsidence`, {
+          params: { since: cache.fetchedAt },
+          timeout: 60000,
+        });
+        const newItems = res.data?.items || [];
+        const generatedAt = res.data?.generatedAt || new Date().toISOString();
+        let result = cache.items;
+        if (newItems.length > 0) {
+          const merged = mergeNewsItems(newItems, cache.items);
+          setNewsCache(generatedAt, merged);
+          setItems(merged);
+          result = merged;
+        } else {
+          setNewsCache(generatedAt, cache.items);
+        }
+        return result;
+      } catch {
+        setError('Không cập nhật được tin mới. Thử lại sau.');
+        return undefined;
+      }
+    }
+    try {
+      const res = await axios.get(`${baseUrl}/news/subsidence`, { timeout: 90000 });
+      const list = res.data?.items || [];
+      const generatedAt = res.data?.generatedAt || new Date().toISOString();
+      setNewsCache(generatedAt, list);
+      setItems(list);
+      setError(null);
+      return list;
+    } catch (err) {
+      setError('Không tải được tin tức từ server. Vui lòng thử lại sau.');
+      console.error('Failed to load subsidence news:', err);
+      return undefined;
+    }
+  };
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-        const res = await axios.get(`${baseUrl}/news/subsidence`, {
-          timeout: 90000, // 90 giây timeout cho AI generation
-        });
-        setItems(res.data.items || []);
-        if (res.data.processingTime) {
-          console.log(`⏱️ Thời gian xử lý: ${res.data.processingTime}`);
-        }
-      } catch (err) {
-        console.error('Failed to load subsidence news:', err);
-        setError('Không tải được tin tức từ server. Vui lòng thử lại sau.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNews();
+    mounted.current = true;
+    const cache = getNewsCache();
+    if (cache?.items?.length) {
+      setItems(cache.items);
+      setLoading(false);
+      setError(null);
+      setPage(1);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetchNews(false).then((list) => {
+      if (mounted.current && list?.length) setPage(Math.ceil(list.length / DEFAULT_PAGE_SIZE) || 1);
+    }).finally(() => {
+      if (mounted.current) setLoading(false);
+    });
+    return () => { mounted.current = false; };
   }, []);
+
+  const handleReload = () => {
+    const cache = getNewsCache();
+    const hasCache = !!(cache?.items?.length);
+    setReloading(true);
+    setError(null);
+    fetchNews(hasCache).then(() => setPage(1)).finally(() => setReloading(false));
+  };
+
+  const total = items.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  const pageClamped = Math.min(Math.max(1, page), totalPages);
+  const sliceStart = (pageClamped - 1) * pageSize;
+  const paginatedItems = items.slice(sliceStart, sliceStart + pageSize);
+  const rangeStart = total ? sliceStart + 1 : 0;
+  const rangeEnd = Math.min(sliceStart + pageSize, total);
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <Title level={2}>
-          <NotificationOutlined /> Tin tức & thông báo
-        </Title>
-        <Paragraph type="secondary">
-          Cập nhật các bản tin, khuyến nghị kỹ thuật và thông báo quan trọng liên quan đến tình hình sụt lún đất.
-        </Paragraph>
+      <div className="page-header news-page-header">
+        <div>
+          <Title level={2}>
+            <NotificationOutlined /> Tin tức & thông báo
+          </Title>
+          <Paragraph type="secondary">
+            Cập nhật các bản tin, khuyến nghị kỹ thuật và thông báo quan trọng liên quan đến tình hình sụt lún đất.
+          </Paragraph>
+        </div>
+        <Button
+          type="primary"
+          icon={<ReloadOutlined />}
+          loading={reloading}
+          onClick={handleReload}
+          className="news-reload-btn"
+        >
+          Cập nhật tin tức
+        </Button>
       </div>
 
       <Card className="page-card">
@@ -72,10 +154,23 @@ const NewsPage = () => {
           <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
         )}
         {!loading && !error && (
-          <List
-            itemLayout="horizontal"
-            dataSource={items}
-            renderItem={(item) => (
+          <>
+            <List
+              itemLayout="horizontal"
+              dataSource={paginatedItems}
+              pagination={{
+                current: pageClamped,
+                pageSize,
+                total,
+                pageSizeOptions: PAGE_SIZE_OPTIONS,
+                showSizeChanger: true,
+                showTotal: () => (total ? `${rangeStart} - ${rangeEnd} / ${total} tin` : ''),
+                onChange: (p, size) => {
+                  setPageSize(size ?? pageSize);
+                  setPage(p);
+                },
+              }}
+              renderItem={(item) => (
               <List.Item>
                 <List.Item.Meta
                   title={
@@ -126,7 +221,8 @@ const NewsPage = () => {
                 />
               </List.Item>
             )}
-          />
+            />
+          </>
         )}
       </Card>
     </div>

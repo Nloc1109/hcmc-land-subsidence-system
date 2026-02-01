@@ -35,8 +35,7 @@ const LoginPage = () => {
         role: data?.user?.roleName || data?.user?.role || 'Người dùng',
       });
       message.success('Đăng nhập thành công!');
-      // Sau khi đăng nhập có thể điều hướng thẳng vào dashboard
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       const msg = error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.';
       message.error(msg);
@@ -56,7 +55,7 @@ const LoginPage = () => {
               onClick={() => navigate('/')}
               className="back-button"
             >
-              Về trang chủ
+              Quay lại
             </Button>
             <Title level={2} className="auth-title">Đăng Nhập</Title>
             <Text className="auth-subtitle">

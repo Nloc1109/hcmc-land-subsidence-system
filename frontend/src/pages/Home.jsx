@@ -13,7 +13,7 @@ import {
   Progress,
   Empty,
   Spin,
-  Alert
+  Carousel
 } from 'antd';
 import { 
   EnvironmentOutlined, 
@@ -36,7 +36,6 @@ import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
-import MonitoringMap from '../components/maps/MonitoringMap';
 import SubsidenceChart from '../components/charts/SubsidenceChart';
 import dashboardApi from '../api/dashboard';
 import './Home.css';
@@ -54,7 +53,6 @@ const HomePage = () => {
   const [districtStats, setDistrictStats] = useState([]);
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [deviceStatus, setDeviceStatus] = useState(null);
-  const [monitoringAreas, setMonitoringAreas] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -83,19 +81,6 @@ const HomePage = () => {
       setDistrictStats(districtData);
       setRecentAlerts(alertsData);
       setDeviceStatus(deviceData);
-
-      // Tạo mock data cho monitoring areas từ district stats
-      const areas = districtData.map((district, index) => ({
-        areaId: index + 1,
-        areaCode: `AREA-${String(index + 1).padStart(3, '0')}`,
-        areaName: `Khu vực ${district.districtName}`,
-        districtName: district.districtName,
-        latitude: 10.7769 + (Math.random() - 0.5) * 0.1,
-        longitude: 106.7009 + (Math.random() - 0.5) * 0.1,
-        riskLevel: district.riskLevel,
-        avgSubsidenceRate: district.avgRate,
-      }));
-      setMonitoringAreas(areas);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -166,98 +151,30 @@ const HomePage = () => {
             của Thành phố Hồ Chí Minh, cung cấp dữ liệu thời gian thực và cảnh báo sớm 
             để bảo vệ an toàn cộng đồng.
           </Paragraph>
-          <Space size="large" className="hero-actions">
-            <Button 
-              type="primary" 
-              size="large"
-              icon={<BarChartOutlined />}
-              onClick={() => navigate('/reports')}
-            >
-              Xem báo cáo tổng quan
-            </Button>
-            <Button 
-              size="large"
-              icon={<RobotOutlined />}
-              onClick={() => navigate('/ai-prediction')}
-            >
-              AI dự đoán thiên tai
-            </Button>
-          </Space>
         </div>
       </section>
 
-      {/* Navigation Section for main modules */}
-      <section className="nav-modules-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">
-            Điều hướng nhanh các mô-đun
-          </Title>
-          <Text className="section-subtitle">
-            Chọn nhanh chức năng bạn muốn sử dụng sau khi đăng nhập hệ thống.
-          </Text>
-        </div>
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/reports')}
-            >
-              <div className="nav-module-icon nav-module-icon-primary">
-                <BarChartOutlined />
-              </div>
-              <Title level={4}>Báo cáo</Title>
-              <Paragraph type="secondary">
-                Xem thống kê, biểu đồ và báo cáo chi tiết theo khu vực, thời gian và chỉ số.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/news')}
-            >
-              <div className="nav-module-icon nav-module-icon-info">
-                <NotificationOutlined />
-              </div>
-              <Title level={4}>Tin tức</Title>
-              <Paragraph type="secondary">
-                Cập nhật nhanh các tin tức, khuyến nghị và thông báo liên quan đến sụt lún.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/diagnosis')}
-            >
-              <div className="nav-module-icon nav-module-icon-warning">
-                <SearchOutlined />
-              </div>
-              <Title level={4}>Chuẩn đoán</Title>
-              <Paragraph type="secondary">
-                Đánh giá nhanh mức độ rủi ro của từng khu vực dựa trên dữ liệu quan trắc.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/ai-prediction')}
-            >
-              <div className="nav-module-icon nav-module-icon-success">
-                <RobotOutlined />
-              </div>
-              <Title level={4}>AI dự đoán thiên tai</Title>
-              <Paragraph type="secondary">
-                Truy cập mô-đun AI để xem dự đoán nguy cơ thiên tai theo khu vực.
-              </Paragraph>
-            </Card>
-          </Col>
-        </Row>
+      {/* Carousel hình ảnh minh họa - tự đổi ảnh theo thời gian, mũi tên trái/phải mờ */}
+      <section className="home-carousel-section">
+        <Carousel
+          autoplay
+          autoplaySpeed={4500}
+          effect="fade"
+          arrows
+          className="home-carousel"
+          style={{ margin: '0 auto', maxWidth: 1200 }}
+        >
+          {[
+            { src: 'https://picsum.photos/seed/subsidence1/1200/500', alt: 'Minh họa giám sát sụt lún' },
+            { src: 'https://picsum.photos/seed/subsidence2/1200/500', alt: 'Khu vực quan trắc' },
+            { src: 'https://picsum.photos/seed/subsidence3/1200/500', alt: 'Hệ thống theo dõi' },
+            { src: 'https://picsum.photos/seed/subsidence4/1200/500', alt: 'Bản đồ và dữ liệu' },
+          ].map((item, index) => (
+            <div key={index} className="home-carousel-slide">
+              <img src={item.src} alt={item.alt} className="home-carousel-img" />
+            </div>
+          ))}
+        </Carousel>
       </section>
 
       {/* Statistics Section */}
@@ -324,22 +241,20 @@ const HomePage = () => {
       {/* Main Content Grid */}
       <section className="main-content-section">
         <Row gutter={[24, 24]}>
-          {/* Map Section */}
+          {/* CTA Bản đồ: chuyển sang Chuẩn đoán, không load map trên Home */}
           <Col xs={24} lg={16}>
-            <Card className="content-card map-card">
+            <Card className="content-card map-cta-card">
               <div className="card-header">
                 <Title level={4}>
                   <EnvironmentOutlined /> Bản Đồ Khu Vực Giám Sát
                 </Title>
-                <Button type="link" onClick={() => navigate('/monitoring')}>
-                  Xem chi tiết <ArrowRightOutlined />
+                <Button type="primary" onClick={() => navigate('/diagnosis')}>
+                  Xem bản đồ tại Chuẩn đoán <ArrowRightOutlined />
                 </Button>
               </div>
-              {monitoringAreas.length > 0 ? (
-                <MonitoringMap areas={monitoringAreas} height="450px" />
-              ) : (
-                <Empty description="Chưa có dữ liệu khu vực giám sát" />
-              )}
+              <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                Sử dụng bản đồ trong mô-đun Chuẩn đoán để chọn khu vực, xem mức độ rủi ro và hỗ trợ đánh giá sụt lún. Bản đồ chỉ tải khi bạn mở tại trang Chuẩn đoán.
+              </Paragraph>
             </Card>
           </Col>
 
@@ -459,45 +374,6 @@ const HomePage = () => {
         </Row>
       </section>
 
-      {/* District Statistics Section */}
-      <section className="district-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">
-            <GlobalOutlined /> Thống Kê Theo Quận/Huyện
-          </Title>
-        </div>
-        <Row gutter={[16, 16]}>
-          {districtStats.map((district, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={index}>
-              <Card className="district-card">
-                <div className="district-header">
-                  <Title level={5}>{district.districtName}</Title>
-                  <Tag color={getRiskLevelColor(district.riskLevel)}>
-                    {district.riskLevel}
-                  </Tag>
-                </div>
-                <div className="district-stats">
-                  <div className="district-stat-item">
-                    <Text type="secondary">Khu vực:</Text>
-                    <Text strong>{district.areas}</Text>
-                  </div>
-                  <div className="district-stat-item">
-                    <Text type="secondary">Cảnh báo:</Text>
-                    <Text strong style={{ color: district.alerts > 0 ? '#f59e0b' : '#10b981' }}>
-                      {district.alerts}
-                    </Text>
-                  </div>
-                  <div className="district-stat-item">
-                    <Text type="secondary">Tốc độ TB:</Text>
-                    <Text strong>{district.avgRate} mm/year</Text>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </section>
-
       {/* Features Section */}
       <section className="features-section">
         <div className="section-header">
@@ -544,33 +420,53 @@ const HomePage = () => {
         </Row>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <Card className="cta-card">
-          <div className="cta-content">
-            <Title level={2}>Bắt Đầu Sử Dụng Ngay</Title>
-            <Paragraph>
-              Đăng ký tài khoản để truy cập đầy đủ các tính năng của hệ thống 
-              và nhận thông báo cảnh báo sớm về tình trạng sụt lún đất.
-            </Paragraph>
-            <Space size="large">
-              <Button 
-                type="primary" 
-                size="large"
-                icon={<ArrowRightOutlined />}
-                onClick={() => navigate('/register')}
-              >
-                Đăng ký ngay
-              </Button>
-              <Button 
-                size="large"
-                onClick={() => navigate('/login')}
-              >
-                Đã có tài khoản? Đăng nhập
-              </Button>
-            </Space>
+      {/* Section PR / Marketing dự án */}
+      <section className="home-marketing-section">
+        <div className="marketing-inner">
+          <div className="marketing-badge">Dự án trọng điểm</div>
+          <Title level={2} className="marketing-title">
+            Hệ thống Quản lý Sụt lún Đất — Giải pháp giám sát an toàn cho TPHCM
+          </Title>
+          <Paragraph className="marketing-lead">
+            Dự án được triển khai nhằm theo dõi liên tục tình trạng sụt lún tại các khu vực trọng điểm,
+            hỗ trợ cơ quan quản lý và người dân có thông tin kịp thời để phòng ngừa rủi ro và bảo vệ an toàn.
+          </Paragraph>
+          <Row gutter={[24, 24]} className="marketing-points">
+            <Col xs={24} md={12} lg={6}>
+              <div className="marketing-point">
+                <SafetyOutlined className="marketing-point-icon" />
+                <Text strong>Dữ liệu thời gian thực</Text>
+                <Text type="secondary">Cập nhật từ trạm quan trắc và cảm biến</Text>
+              </div>
+            </Col>
+            <Col xs={24} md={12} lg={6}>
+              <div className="marketing-point">
+                <ThunderboltOutlined className="marketing-point-icon" />
+                <Text strong>Cảnh báo sớm</Text>
+                <Text type="secondary">Tự động khi vượt ngưỡng an toàn</Text>
+              </div>
+            </Col>
+            <Col xs={24} md={12} lg={6}>
+              <div className="marketing-point">
+                <BarChartOutlined className="marketing-point-icon" />
+                <Text strong>Báo cáo & phân tích</Text>
+                <Text type="secondary">Biểu đồ, xu hướng và báo cáo chi tiết</Text>
+              </div>
+            </Col>
+            <Col xs={24} md={12} lg={6}>
+              <div className="marketing-point">
+                <RobotOutlined className="marketing-point-icon" />
+                <Text strong>AI dự đoán</Text>
+                <Text type="secondary">Dự báo rủi ro theo khu vực và thời gian</Text>
+              </div>
+            </Col>
+          </Row>
+          <div className="marketing-footer">
+            <Text type="secondary">
+              Hệ thống Quản lý Sụt lún Đất TPHCM — Đối tác tin cậy trong giám sát an toàn hạ tầng và cộng đồng.
+            </Text>
           </div>
-        </Card>
+        </div>
       </section>
     </div>
   );
