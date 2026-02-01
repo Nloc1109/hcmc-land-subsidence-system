@@ -11,6 +11,7 @@ import {
   RobotOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth/useAuthStore';
+import CookieConsent from '../components/CookieConsent';
 import './MainLayout.css';
 
 const { Header, Content, Footer } = Layout;
@@ -68,6 +69,7 @@ const MainLayout = () => {
 
   return (
     <Layout className="main-layout">
+      <CookieConsent />
       <Header className="main-header">
         <div className="header-content">
           <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>

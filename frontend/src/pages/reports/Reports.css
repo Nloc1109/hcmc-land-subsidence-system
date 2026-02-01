@@ -65,3 +65,35 @@
   margin-bottom: 24px;
 }
 
+/* CTA: chỉ khi chọn mới load thống kê */
+.reports-district-cta {
+  margin-top: 24px;
+}
+
+.reports-district-cta-card .reports-district-cta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.reports-district-cta-btn {
+  min-width: 280px;
+}
+
+/* Sub-view: thống kê theo quận/huyện & phường/xã */
+.reports-sub-view .reports-sub-view-header {
+  margin-bottom: 24px;
+}
+
+.reports-sub-view .reports-back-btn {
+  margin-bottom: 16px;
+}
+
+.reports-sub-view .reports-sub-view-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: 48px;
+}

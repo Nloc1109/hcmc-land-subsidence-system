@@ -61,6 +61,10 @@ if (process.env.OPENAI_API_KEY) {
   });
 }
 
+/**
+ * GET /api/news/subsidence
+ * Query: since (ISO date, optional) — nếu có thì chỉ trả tin từ ngày đó đến nay (fetch tăng dần).
+ */
 app.get('/api/news/subsidence', async (req, res) => {
   try {
     if (!openaiClient) {
@@ -69,18 +73,15 @@ app.get('/api/news/subsidence', async (req, res) => {
       });
     }
 
-    const completion = await openaiClient.chat.completions.create({
-      model: 'gpt-4.1',
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Bạn là hệ thống tổng hợp tin tức về sụt lún đất, ngập và lún nền tại Việt Nam. Trả về JSON đúng cú pháp để frontend hiển thị.',
-        },
-        {
-          role: 'user',
-          content: `
+    const since = req.query.since; // ISO string, e.g. 2025-01-28T10:00:00.000Z
+
+    const userContent = since
+      ? `
+Chỉ tạo các tin tức MỚI từ ngày ${since.slice(0, 10)} đến nay (mô phỏng, tối đa 5–8 tin). Nếu không có tin mới, trả về items: [].
+- Sụt lún đất, lún nền, ngập tại TP.HCM và Việt Nam.
+TRẢ VỀ DUY NHẤT MỘT JSON OBJECT: { "items": [ { "id", "title", "source", "publishedAt", "location", "summary", "url", "tags" } ] }
+`.trim()
+      : `
 Hãy tạo danh sách 10–15 tin tức gần đây (mô phỏng nhưng sát thực tế) về:
 - Sụt lún đất, lún nền, ngập do lún tại TP.HCM (ưu tiên ít nhất 5 tin).
 - Các khu vực còn lại tại Việt Nam (miền Tây, miền Trung, Hà Nội, ven biển, v.v.).
@@ -100,13 +101,22 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
     }
   ]
 }
-`.trim(),
+`.trim();
+
+    const completion = await openaiClient.chat.completions.create({
+      model: 'gpt-4.1',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Bạn là hệ thống tổng hợp tin tức về sụt lún đất, ngập và lún nền tại Việt Nam. Trả về JSON đúng cú pháp để frontend hiển thị.',
         },
+        { role: 'user', content: userContent },
       ],
     });
 
     const raw = completion.choices[0]?.message?.content;
-
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed.items)) {
       return res.status(500).json({
