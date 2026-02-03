@@ -1,0 +1,23 @@
+.admin-page {
+  padding: 24px;
+}
+
+.admin-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.admin-page .ant-table {
+  background: white;
+}
+
+.admin-page .ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+}
+
+.admin-page .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
