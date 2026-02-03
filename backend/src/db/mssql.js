@@ -3,7 +3,9 @@ import mssql from 'mssql';
 
 dotenv.config();
 
+
 const DB_HOST = process.env.DB_HOST || 'localhost\\SQLEXPRESS';
+
 const DB_NAME = process.env.DB_NAME || 'HCMC_LandSubsidence';
 const DB_USER = process.env.DB_USER || 'sa';
 const DB_PASSWORD = process.env.DB_PASSWORD || '123456';
