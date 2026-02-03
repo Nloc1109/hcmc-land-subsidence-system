@@ -179,6 +179,37 @@ router.post('/login', async (req, res) => {
     const token = generateToken(userWithRole);
     const safeUser = mapUserRow({ ...userRow, RoleName: roleRow?.RoleName || 'User' });
 
+    // Ghi log đăng nhập
+    try {
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      
+      const logRequest = pool.request();
+      logRequest.input('UserId', userRow.UserId);
+      logRequest.input('ActionType', 'Login');
+      logRequest.input('IpAddress', ipAddress);
+      logRequest.input('UserAgent', userAgent);
+      
+      await logRequest.query(`
+        INSERT INTO AuditLogs (UserId, ActionType, IpAddress, UserAgent, CreatedAt)
+        VALUES (@UserId, @ActionType, @IpAddress, @UserAgent, GETDATE())
+      `);
+    } catch (logError) {
+      console.error('Error logging login:', logError);
+      // Không chặn đăng nhập nếu log lỗi
+    }
+
+    // Cập nhật LastLoginAt
+    try {
+      const updateRequest = pool.request();
+      updateRequest.input('UserId', userRow.UserId);
+      await updateRequest.query(`
+        UPDATE Users SET LastLoginAt = GETDATE() WHERE UserId = @UserId
+      `);
+    } catch (updateError) {
+      console.error('Error updating last login:', updateError);
+    }
+
     return res.json({
       message: 'Đăng nhập thành công',
       user: safeUser,

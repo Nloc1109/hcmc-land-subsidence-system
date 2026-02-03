@@ -10,6 +10,8 @@ import ReportsPage from './pages/reports/Reports';
 import NewsPage from './pages/news/News';
 import DiagnosisPage from './pages/diagnosis/Diagnosis';
 import AiPredictionPage from './pages/ai/AiPrediction';
+import UserManagementPage from './pages/admin/UserManagement';
+import LoginLogsPage from './pages/admin/LoginLogs';
 import './styles/App.css';
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
               <Route path="news" element={<NewsPage />} />
               <Route path="diagnosis" element={<DiagnosisPage />} />
               <Route path="ai-prediction" element={<AiPredictionPage />} />
+              <Route path="admin/users" element={<UserManagementPage />} />
+              <Route path="admin/login-logs" element={<LoginLogsPage />} />
             </Route>
           </Route>
         </Route>

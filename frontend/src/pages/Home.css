@@ -3,7 +3,26 @@
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f5ede8 0%, #f0e8e0 50%, #ebe4dd 100%);
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.home-page .ant-row {
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 !important;
+}
+
+.main-content-col {
+  padding-right: 12px;
+  width: 100%;
+}
+
+.news-sidebar-col {
+  padding-left: 12px;
+  width: 100%;
 }
 
 /* Loading Container */
@@ -16,10 +35,10 @@
 
 /* Hero Section - gọn, vừa vặn, không nút */
 .hero-section {
-  background: linear-gradient(135deg, #f5ede8 0%, #f0e8e0 50%, #ebe4dd 100%);
+  background: transparent;
   padding: 48px 24px 56px;
   text-align: center;
-  border-bottom: 1px solid #d4c4b8;
+  border-bottom: none;
   position: relative;
   overflow: hidden;
 }
@@ -28,6 +47,7 @@
   content: '';
   position: absolute;
   top: 0;
+  display: none;
   left: 0;
   right: 0;
   bottom: 0;
@@ -228,13 +248,13 @@
 
 /* Stats Section - Sáng nhẹ nhàng */
 .stats-section {
-  padding: 80px 0;
-  background: #f1f5f9;
+  padding: 80px 48px;
+  background: transparent;
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #f1f5f9 100%) !important;
-  border: 1px solid #b8c5d1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(184, 197, 209, 0.5) !important;
   border-radius: 16px;
   text-align: center;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -264,7 +284,7 @@
   border-color: #3b82f6 !important;
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
-  background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%) !important;
+  background: transparent !important;
 }
 
 .stat-card-primary:hover {
@@ -285,20 +305,32 @@
 
 .stat-card .ant-statistic-title {
   color: #64748b;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 500;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .stat-card .ant-statistic-content {
   color: #1e293b;
-  font-weight: 800;
-  font-size: 32px;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.stat-card .ant-statistic-content .ant-statistic-content-value {
+  font-size: 24px !important;
+}
+
+.stat-card .ant-statistic-content .ant-statistic-content-prefix {
+  font-size: 20px !important;
+}
+
+.stat-card .ant-statistic-content .ant-statistic-content-suffix {
+  font-size: 14px !important;
 }
 
 .stat-card .anticon {
-  font-size: 32px;
-  margin-right: 12px;
+  font-size: 20px;
+  margin-right: 8px;
   opacity: 0.9;
 }
 
@@ -316,13 +348,13 @@
 
 /* Main Content Section */
 .main-content-section {
-  padding: 60px 0;
-  background: #eef2f6;
+  padding: 60px 48px;
+  background: transparent;
 }
 
 .content-card {
-  background: #f5f7fa !important;
-  border: 1px solid #b8c5d1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(184, 197, 209, 0.5) !important;
   border-radius: 20px;
   transition: all 0.3s;
   overflow: hidden;
@@ -415,13 +447,13 @@
 
 /* Charts Section */
 .charts-section {
-  padding: 60px 0;
-  background: #f1f5f9;
+  padding: 60px 48px;
+  background: transparent;
 }
 
 .chart-card {
-  background: #f5f7fa !important;
-  border: 1px solid #b8c5d1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(184, 197, 209, 0.5) !important;
   border-radius: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
@@ -449,13 +481,13 @@
 
 /* District Section */
 .district-section {
-  padding: 60px 0;
-  background: #eef2f6;
+  padding: 60px 48px;
+  background: transparent;
 }
 
 .district-card {
-  background: #f5f7fa !important;
-  border: 1px solid #b8c5d1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(184, 197, 209, 0.5) !important;
   border-radius: 16px;
   transition: all 0.3s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -509,16 +541,23 @@
   font-weight: 600;
 }
 
+/* Features and News Section */
+.features-news-section {
+  padding: 60px 48px;
+  background: transparent;
+  position: relative;
+}
+
 /* Features Section */
 .features-section {
-  padding: 80px 0;
-  background: linear-gradient(135deg, #dde7f0 0%, #e8edf2 50%, #eef2f6 100%);
+  padding: 80px 48px;
+  background: transparent;
   position: relative;
 }
 
 .feature-card {
-  background: #f5f7fa !important;
-  border: 1px solid #b8c5d1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(184, 197, 209, 0.5) !important;
   border-radius: 20px;
   height: 100%;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -531,7 +570,7 @@
   border-color: #3b82f6 !important;
   transform: translateY(-8px);
   box-shadow: 0 16px 40px rgba(59, 130, 246, 0.15);
-  background: #f5f7fa !important;
+  background: transparent !important;
 }
 
 .feature-icon {
@@ -580,15 +619,148 @@
   font-size: 15px;
 }
 
+/* News Section */
+.news-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  padding: 24px 0 !important;
+}
+
+.news-sidebar {
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.news-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  min-height: 0;
+}
+
+.news-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.news-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.news-list::-webkit-scrollbar-thumb {
+  background: rgba(184, 197, 209, 0.5);
+  border-radius: 2px;
+}
+
+.news-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 197, 209, 0.7);
+}
+
+.news-item {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(184, 197, 209, 0.3) !important;
+  border-radius: 0;
+  padding: 16px 0 !important;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.news-item:hover {
+  border-bottom-color: #3b82f6 !important;
+  transform: translateX(4px);
+  box-shadow: none;
+  padding-left: 8px !important;
+}
+
+.news-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.news-category {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.news-date {
+  font-size: 12px;
+  color: #64748b !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.news-title {
+  color: #1e293b !important;
+  margin-bottom: 12px !important;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  transition: color 0.3s;
+}
+
+.news-item:hover .news-title {
+  color: #3b82f6 !important;
+}
+
+.news-summary {
+  color: #64748b !important;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 12px !important;
+}
+
+.news-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(184, 197, 209, 0.3);
+}
+
+.news-views {
+  font-size: 12px;
+  color: #94a3b8 !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.news-item .ant-btn-link {
+  padding: 0;
+  height: auto;
+  font-size: 12px;
+  color: #3b82f6 !important;
+}
+
+.news-item .ant-btn-link:hover {
+  color: #2563eb !important;
+}
+
 /* CTA Section */
 .cta-section {
   padding: 80px 0;
-  background: #f1f5f9;
+  background: transparent;
 }
 
 .cta-card {
-  background: linear-gradient(135deg, #dde7f0 0%, #e8edf2 50%, #eef2f6 100%) !important;
-  border: 2px solid rgba(59, 130, 246, 0.2) !important;
+  background: transparent !important;
+  border: 2px solid rgba(59, 130, 246, 0.3) !important;
   border-radius: 24px;
   text-align: center;
   padding: 64px 48px !important;
@@ -805,11 +977,27 @@
     font-size: 28px !important;
   }
 
-  .stats-section,
-  .features-section,
-  .cta-section,
-  .charts-section,
+  .stats-section {
+    padding: 60px 24px;
+  }
+
+  .main-content-section {
+    padding: 40px 24px;
+  }
+
+  .charts-section {
+    padding: 40px 24px;
+  }
+
   .district-section {
+    padding: 40px 24px;
+  }
+
+  .features-section {
+    padding: 60px 24px;
+  }
+
+  .cta-section {
     padding: 40px 0;
   }
 
