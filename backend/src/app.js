@@ -7,6 +7,11 @@ import OpenAI from 'openai';
 
 import { getPool } from './db/mssql.js';
 import authRouter from './routes/auth.js';
+import dashboardRouter from './routes/dashboard.js';
+import alertsRouter from './routes/alerts.js';
+import devicesRouter from './routes/devices.js';
+import usersRouter from './routes/users.js';
+import auditLogsRouter from './routes/audit-logs.js';
 
 dotenv.config();
 
@@ -15,9 +20,25 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
+// CORS configuration - allow multiple origins in development
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Parse allowed origins from environment variable (comma-separated)
+      const allowedOrigins = CORS_ORIGIN.split(',').map(o => o.trim());
+      
+      // In development, also allow any localhost port
+      const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
+      
+      if (allowedOrigins.includes(origin) || (process.env.NODE_ENV !== 'production' && isLocalhost)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -27,6 +48,21 @@ app.use(morgan('dev'));
 
 // Auth routes
 app.use('/api/v1/auth', authRouter);
+
+// Dashboard routes
+app.use('/api/v1/dashboard', dashboardRouter);
+
+// Alerts routes
+app.use('/api/v1/alerts', alertsRouter);
+
+// Devices routes
+app.use('/api/v1/devices', devicesRouter);
+
+// Users management routes (Admin only)
+app.use('/api/v1/users', usersRouter);
+
+// Audit logs routes (Admin only)
+app.use('/api/v1/audit-logs', auditLogsRouter);
 
 // Health check (giữ lại cả endpoint cũ lẫn mới nếu cần về sau)
 app.get('/api/health', (req, res) => {

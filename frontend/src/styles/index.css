@@ -46,23 +46,25 @@ body {
   z-index: 1;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Ẩn scrollbar nhưng vẫn cho phép scroll */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbb9ac;
-  border-radius: 4px;
+  display: none;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #bfa899;
+/* Ẩn scrollbar cho Firefox */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 /* Ant Design overrides */

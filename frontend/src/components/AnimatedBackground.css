@@ -9,6 +9,17 @@
   pointer-events: none;
 }
 
+/* Parallax wrapper - di chuyển theo chuột */
+.parallax-wrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
 /* Base gradient background - Sáng nhẹ nhàng, tự nhiên */
 .bg-base-gradient {
   position: absolute;
@@ -23,7 +34,8 @@
     #f5ede8 100%
   );
   background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
+  animation: gradientShift 12s ease infinite;
+  transition: transform 0.1s ease-out;
 }
 
 @keyframes gradientShift {
@@ -44,12 +56,12 @@
     0deg,
     transparent,
     transparent 2px,
-    rgba(37, 99, 235, 0.035) 2px,
-    rgba(37, 99, 235, 0.035) 4px
+    rgba(37, 99, 235, 0.08) 2px,
+    rgba(37, 99, 235, 0.08) 4px
   );
   background-size: 100% 60px;
-  animation: stripeMove1 15s linear infinite;
-  opacity: 0.4;
+  animation: stripeMove1 10s linear infinite;
+  opacity: 0.7;
 }
 
 /* Animated stripes - Layer 2: Diagonal (45deg) */
@@ -58,12 +70,12 @@
     45deg,
     transparent,
     transparent 3px,
-    rgba(180, 83, 9, 0.03) 3px,
-    rgba(180, 83, 9, 0.03) 6px
+    rgba(180, 83, 9, 0.06) 3px,
+    rgba(180, 83, 9, 0.06) 6px
   );
   background-size: 80px 80px;
-  animation: stripeMove2 20s linear infinite;
-  opacity: 0.3;
+  animation: stripeMove2 12s linear infinite;
+  opacity: 0.6;
 }
 
 /* Animated stripes - Layer 3: Diagonal (-45deg) */
@@ -72,12 +84,12 @@
     -45deg,
     transparent,
     transparent 4px,
-    rgba(37, 99, 235, 0.02) 4px,
-    rgba(37, 99, 235, 0.02) 8px
+    rgba(37, 99, 235, 0.05) 4px,
+    rgba(37, 99, 235, 0.05) 8px
   );
   background-size: 100px 100px;
-  animation: stripeMove3 25s linear infinite;
-  opacity: 0.25;
+  animation: stripeMove3 15s linear infinite;
+  opacity: 0.5;
 }
 
 /* Animated stripes - Layer 4: Vertical */
@@ -86,12 +98,12 @@
     90deg,
     transparent,
     transparent 2px,
-    rgba(180, 83, 9, 0.018) 2px,
-    rgba(180, 83, 9, 0.018) 4px
+    rgba(180, 83, 9, 0.05) 2px,
+    rgba(180, 83, 9, 0.05) 4px
   );
   background-size: 50px 100%;
-  animation: stripeMove4 18s linear infinite;
-  opacity: 0.2;
+  animation: stripeMove4 14s linear infinite;
+  opacity: 0.5;
 }
 
 /* Common stripe styles */
@@ -102,6 +114,7 @@
   top: 0;
   left: 0;
   will-change: transform;
+  transition: transform 0.1s ease-out;
 }
 
 /* Stripe animations */
@@ -110,7 +123,7 @@
     transform: translateY(0);
   }
   100% {
-    transform: translateY(60px);
+    transform: translateY(120px);
   }
 }
 
@@ -119,7 +132,7 @@
     transform: translate(0, 0) rotate(0deg);
   }
   100% {
-    transform: translate(80px, 80px) rotate(360deg);
+    transform: translate(160px, 160px) rotate(360deg);
   }
 }
 
@@ -128,7 +141,7 @@
     transform: translate(0, 0) rotate(0deg);
   }
   100% {
-    transform: translate(-100px, 100px) rotate(-360deg);
+    transform: translate(-200px, 200px) rotate(-360deg);
   }
 }
 
@@ -137,7 +150,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(50px);
+    transform: translateX(100px);
   }
 }
 
@@ -147,11 +160,12 @@
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(15, 23, 42, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
   background-size: 80px 80px;
-  opacity: 0.4;
-  animation: gridMove 30s linear infinite;
+  opacity: 0.6;
+  animation: gridMove 20s linear infinite;
+  transition: transform 0.1s ease-out;
 }
 
 @keyframes gridMove {
@@ -159,7 +173,7 @@
     transform: translate(0, 0);
   }
   100% {
-    transform: translate(80px, 80px);
+    transform: translate(160px, 160px);
   }
 }
 
