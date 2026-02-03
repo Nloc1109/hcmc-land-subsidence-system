@@ -3,10 +3,10 @@ import mssql from 'mssql';
 
 dotenv.config();
 
-const DB_HOST = process.env.DB_HOST || 'DESKTOP-B7F3HIU';
+const DB_HOST = process.env.DB_HOST || 'localhost\\SQLEXPRESS';
 const DB_NAME = process.env.DB_NAME || 'HCMC_LandSubsidence';
 const DB_USER = process.env.DB_USER || 'sa';
-const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_PASSWORD = process.env.DB_PASSWORD || '123456';
 const DB_INSTANCE = process.env.DB_INSTANCE; // Named instance như LOC1109, SQLEXPRESS
 const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined;
 

@@ -142,7 +142,7 @@ const SubsidenceChart = ({ data = [], title = 'Xu hướng sụt lún' }) => {
   };
 
   return (
-    <Card className="chart-card">
+    <Card className="chart-card" title={title}>
       <div style={{ height: '300px', position: 'relative' }}>
         <Line data={chartData} options={options} />
       </div>
