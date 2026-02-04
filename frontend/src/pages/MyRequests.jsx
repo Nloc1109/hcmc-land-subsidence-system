@@ -518,6 +518,7 @@ const MyRequests = () => {
         okText="Từ chối"
         cancelText="Hủy"
         okButtonProps={{ danger: true }}
+        forceRender
       >
         {selectedRequest && (
           <>
@@ -551,6 +552,7 @@ const MyRequests = () => {
         onOk={() => negotiateForm.submit()}
         okText="Gửi yêu cầu thương lượng"
         cancelText="Hủy"
+        forceRender
       >
         {selectedRequest && (
           <>

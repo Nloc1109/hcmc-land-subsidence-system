@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Typography,
   Card,
@@ -372,7 +372,7 @@ export default function NewsPage() {
       </div>
       {systemNewsLoading && (
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spin tip="Đang tải tin hệ thống..." />
+          <Spin tip="Đang tải tin hệ thống..."><div style={{ minHeight: 80 }} /></Spin>
         </div>
       )}
       {!systemNewsLoading && systemNewsList.length === 0 && (
@@ -527,7 +527,7 @@ export default function NewsPage() {
         confirmLoading={formSubmitting}
         okText={formEditingId ? 'Cập nhật' : 'Đăng tin'}
         width={560}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Nhập tiêu đề' }]}>

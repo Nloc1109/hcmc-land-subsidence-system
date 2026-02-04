@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Space, Tag, Badge } from 'antd';
 import {
@@ -78,7 +78,7 @@ const MainLayout = () => {
   const isAnalyst = userRole === 'Analyst';
   const isViewer = userRole === 'Viewer';
   const isOperator = userRole === 'Operator';
-
+  const isManager = userRole === 'Manager';
 
   const menuItems = isAuthenticated
     ? [

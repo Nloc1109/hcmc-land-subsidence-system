@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Typography, 
   Row, 
@@ -22,6 +22,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/auth/useAuthStore';
 import dashboardApi from '../api/dashboard';
 import SendReportButton from '../components/SendReportButton';
 import './Home.css';
@@ -30,6 +31,9 @@ const { Title, Paragraph, Text } = Typography;
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const userRole = user?.role || user?.roleName || user?.RoleName;
+  const isViewer = userRole === 'Viewer';
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [news, setNews] = useState([]);
@@ -118,8 +122,9 @@ const HomePage = () => {
 
   if (loading) {
     return (
-<div className="home-page loading-container">
-        <Spin size="large" tip="Đang tải dữ liệu..."><div style={{ minHeight: 120 }} /></Spin>
+      <div className="home-page loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <Spin size="large" />
+        <Text type="secondary">Đang tải dữ liệu...</Text>
       </div>
     );
   }
@@ -146,24 +151,26 @@ const HomePage = () => {
             của Thành phố Hồ Chí Minh, cung cấp dữ liệu thời gian thực và cảnh báo sớm 
             để bảo vệ an toàn cộng đồng.
           </Paragraph>
-          <Space size="large" className="hero-actions">
-            <Button 
-              type="primary" 
-              size="large"
-              icon={<DashboardOutlined />}
-              onClick={() => navigate('/monitoring')}
-            >
-              Xem bản đồ giám sát
-            </Button>
-            <Button 
-              size="large"
-              icon={<BarChartOutlined />}
-              onClick={() => navigate('/reports')}
-            >
-              Xem báo cáo
-            </Button>
-            <SendReportButton sourcePageName="Trang chủ" type="default" reportData={homeReportData} />
-          </Space>
+          {!isViewer && (
+            <Space size="large" className="hero-actions">
+              <Button 
+                type="primary" 
+                size="large"
+                icon={<DashboardOutlined />}
+                onClick={() => navigate('/monitoring')}
+              >
+                Xem bản đồ giám sát
+              </Button>
+              <Button 
+                size="large"
+                icon={<BarChartOutlined />}
+                onClick={() => navigate('/reports')}
+              >
+                Xem báo cáo
+              </Button>
+              <SendReportButton sourcePageName="Trang chủ" type="default" reportData={homeReportData} />
+            </Space>
+          )}
         </div>
       </section>
 

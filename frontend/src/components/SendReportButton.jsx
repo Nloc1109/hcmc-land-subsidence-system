@@ -145,7 +145,6 @@ const SendReportButton = ({ sourcePageName, type = 'default', showLabel = true, 
         confirmLoading={sending}
         okText="Gửi báo cáo"
         width={520}
-        destroyOnHidden
         className="send-report-modal"
       >
         <p className="send-report-desc">

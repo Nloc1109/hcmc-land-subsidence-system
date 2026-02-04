@@ -135,31 +135,43 @@ router.post('/:id/reset-password', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = parseInt(id, 10);
+    if (Number.isNaN(userId) || userId < 1) {
+      return res.status(400).json({ message: 'ID người dùng không hợp lệ' });
+    }
     const pool = await getPool();
     const request = pool.request();
-    request.input('UserId', parseInt(id));
-    
+    request.input('UserId', userId);
+
     const result = await request.query(`
       SELECT 
-        u.*,
-        r.RoleName
+        u.UserId,
+        u.Username,
+        u.Email,
+        u.FullName,
+        u.PhoneNumber,
+        u.RoleId,
+        r.RoleName,
+        u.IsActive,
+        u.LastLoginAt,
+        u.CreatedAt,
+        u.UpdatedAt
       FROM Users u
       LEFT JOIN Roles r ON u.RoleId = r.RoleId
       WHERE u.UserId = @UserId
     `);
-    
-    if (result.recordset.length === 0) {
+
+    if (!result.recordset || result.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
-    
-    const user = result.recordset[0];
-    // Không trả về password hash
-    delete user.PasswordHash;
-    
-    res.json({ user: user });
+
+    res.json({ user: result.recordset[0] });
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Lỗi khi lấy thông tin người dùng' });
+    res.status(500).json({
+      message: 'Lỗi khi lấy thông tin người dùng',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 });
 

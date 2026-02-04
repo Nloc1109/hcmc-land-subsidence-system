@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import {
   Typography,
   Card,
@@ -175,8 +175,9 @@ const DiagnosisPage = () => {
     async function loadMapData() {
       setMapLoading(true);
       try {
-        const districtData = await dashboardApi.getDistrictStats();
+        const raw = await dashboardApi.getDistrictStats();
         if (cancelled) return;
+        const districtData = Array.isArray(raw) ? raw : (raw?.districts || raw?.data || []);
         const areas = districtData.map((district, index) => {
           const coords = getDistrictCoordinates(district.districtName, index);
           return {
@@ -208,7 +209,7 @@ const DiagnosisPage = () => {
     async function loadDiagnosisData() {
       try {
         const [topRisk, alerts] = await Promise.all([
-          dashboardApi.getTopRiskAreas(8),
+          dashboardApi.getTopRiskAreas(10),
           dashboardApi.getRecentAlerts(15),
         ]);
         if (!cancelled) {
@@ -342,10 +343,12 @@ const DiagnosisPage = () => {
     (elevations.length ? elevations[0] : null);
 
   const safeTopRiskAreas = Array.isArray(topRiskAreas) ? topRiskAreas : [];
+  // Danh sách để chọn khu vực: dùng mapAreas (cùng nguồn với bản đồ) để luôn có dữ liệu; lọc theo mức rủi ro
+  const areasForSelection = Array.isArray(mapAreas) ? mapAreas : [];
   const filteredAreas =
     riskFilter === 'all'
-      ? safeTopRiskAreas
-      : safeTopRiskAreas.filter((a) => a && a.riskLevel === riskFilter);
+      ? areasForSelection
+      : areasForSelection.filter((a) => a && a.riskLevel === riskFilter);
 
   // Số liệu báo cáo đưa vào file PDF/Excel khi gửi từ trang Chẩn đoán
   const diagnosisReportData = useMemo(() => {
@@ -503,7 +506,7 @@ ${alertsHtml}
         </div>
       </div>
 
-{/* Bản đồ (nửa trái) + Chênh lệch độ cao (nửa phải) — cùng kích thước */}
+      {/* Bản đồ (nửa trái) + Chênh lệch độ cao (nửa phải) — cùng kích thước */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }} className="diagnosis-map-elevation-row">
         <Col xs={24} md={12}>
           <Card className="diagnosis-card diagnosis-map-card diagnosis-equal-height" variant="borderless">
@@ -607,7 +610,7 @@ ${alertsHtml}
               </>
             ) : elevationLoading ? (
               <div className="diagnosis-map-loading" style={{ minHeight: 200 }}>
-                <Spin size="large" tip="Đang lấy độ cao các điểm..." />
+                <Spin size="large" tip="Đang lấy độ cao các điểm..."><div style={{ minHeight: 120 }} /></Spin>
               </div>
             ) : elevationError ? (
               <Alert type="warning" showIcon message="Không lấy được độ cao" description={elevationError} />
@@ -659,7 +662,7 @@ ${alertsHtml}
         </Col>
       </Row>
 
-{/* Nút ghi chú ký hiệu — bấm để hiện popover nổi */}
+      {/* Nút ghi chú ký hiệu — bấm để hiện popover nổi */}
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'flex-end' }}>
         <Popover
           content={
@@ -741,7 +744,7 @@ ${alertsHtml}
             <div className="diagnosis-area-list">
               {filteredAreas.length === 0 ? (
                 <Empty
-                  description={safeTopRiskAreas.length === 0 ? 'Chưa có dữ liệu khu vực' : 'Không có khu vực nào theo mức đã chọn'}
+                  description={areasForSelection.length === 0 ? 'Đang tải danh sách khu vực...' : 'Không có khu vực nào theo mức đã chọn'}
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               ) : (
@@ -792,7 +795,7 @@ ${alertsHtml}
         <Col xs={24} lg={10}>
           {selectedArea ? (
             <>
-<Card className="diagnosis-card diagnosis-detail-card" variant="borderless">
+              <Card className="diagnosis-card diagnosis-detail-card" variant="borderless">
                 <div className="diagnosis-card-header diagnosis-card-header--actions">
                   <span className="diagnosis-card-header-left">
                     <BarChartOutlined className="diagnosis-card-icon" />
@@ -854,7 +857,7 @@ ${alertsHtml}
                   </div>
                 </div>
               </Card>
-<Card className="diagnosis-card" variant="borderless">
+              <Card className="diagnosis-card" variant="borderless">
                 <div className="diagnosis-card-header">
                   <BulbOutlined className="diagnosis-card-icon" />
                   <span>Khuyến nghị</span>
@@ -868,7 +871,7 @@ ${alertsHtml}
                 </ul>
               </Card>
               {alertsForSelected.length > 0 && (
-<Card className="diagnosis-card" variant="borderless">
+                <Card className="diagnosis-card" variant="borderless">
                   <div className="diagnosis-card-header">
                     <BellOutlined className="diagnosis-card-icon" />
                     <span>Cảnh báo liên quan ({alertsForSelected.length})</span>
@@ -902,7 +905,7 @@ ${alertsHtml}
               </Button>
             </>
           ) : (
-<Card className="diagnosis-card diagnosis-placeholder-card" variant="borderless">
+            <Card className="diagnosis-card diagnosis-placeholder-card" variant="borderless">
               <div className="diagnosis-placeholder">
                 <RiseOutlined className="diagnosis-placeholder-icon" />
                 <Title level={5}>Chưa chọn khu vực</Title>
@@ -937,7 +940,7 @@ ${alertsHtml}
       </Row>
 
       {/* Quy trình chẩn đoán - trạng thái theo bước người dùng đang ở */}
-<Card className="diagnosis-card diagnosis-process-card" variant="borderless">
+      <Card className="diagnosis-card diagnosis-process-card" variant="borderless">
         <div className="diagnosis-card-header">
           <CheckCircleOutlined className="diagnosis-card-icon" />
           <span>Quy trình chẩn đoán</span>
