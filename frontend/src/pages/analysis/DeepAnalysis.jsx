@@ -9,6 +9,15 @@ const DeepAnalysis = () => {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const deepAnalysisReportData = useMemo(() => {
+    const lines = ['Phân tích chuyên sâu', `Số khu vực giám sát: ${areas.length}`];
+    if (areas.length > 0) {
+      const names = areas.map((a) => a.name || a.Name || a.MonitoringAreaName).filter(Boolean);
+      if (names.length) lines.push('Khu vực: ' + names.join(', '));
+    }
+    return lines;
+  }, [areas]);
+
   useEffect(() => {
     const fetchAreas = async () => {
       try {

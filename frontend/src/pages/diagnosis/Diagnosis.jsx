@@ -418,8 +418,6 @@ ${alertsHtml}
         </div>
       </Card>
 
-<<<<<<< HEAD
-=======
       {/* Biểu đồ: phân bố mức rủi ro + xu hướng sụt lún */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         <Col xs={24} md={12}>
@@ -442,7 +440,6 @@ ${alertsHtml}
         </Col>
       </Row>
 
->>>>>>> d2e356f0c96a2d197108cad1157470d9cda29705
       <Row gutter={[24, 24]}>
         {/* Danh sách khu vực có nguy cơ + Chọn để chẩn đoán */}
         <Col xs={24} lg={14}>

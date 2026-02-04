@@ -49,6 +49,20 @@ const STATUS_CONFIG = {
   Cancelled: { color: 'default', label: 'Đã hủy' },
 };
 
+// Loại yêu cầu cố định (chọn, không tự nhập)
+const REQUEST_TYPES = [
+  { value: 'Lập báo cáo sụt lún theo khu vực/quận', label: 'Lập báo cáo sụt lún theo khu vực/quận' },
+  { value: 'Kiểm tra và xác minh số liệu đo tại khu vực giám sát', label: 'Kiểm tra và xác minh số liệu đo tại khu vực giám sát' },
+  { value: 'Phân tích chuyên sâu khu vực, xu hướng và khuyến nghị', label: 'Phân tích chuyên sâu khu vực, xu hướng và khuyến nghị' },
+  { value: 'Xem xét và xử lý cảnh báo đang mở (acknowledge/resolve)', label: 'Xem xét và xử lý cảnh báo đang mở (acknowledge/resolve)' },
+  { value: 'Cập nhật mức rủi ro và ghi chú cho khu vực giám sát', label: 'Cập nhật mức rủi ro và ghi chú cho khu vực giám sát' },
+  { value: 'Tổng hợp tình hình sụt lún tuần/tháng (bản tóm tắt)', label: 'Tổng hợp tình hình sụt lún tuần/tháng (bản tóm tắt)' },
+  { value: 'Đối chiếu danh sách trạm đo với hồ sơ', label: 'Đối chiếu danh sách trạm đo với hồ sơ' },
+  { value: 'Kiểm tra giao diện bản đồ và báo lỗi hiển thị', label: 'Kiểm tra giao diện bản đồ và báo lỗi hiển thị' },
+  { value: 'Tổng hợp tin tức/links về sụt lún theo địa bàn', label: 'Tổng hợp tin tức/links về sụt lún theo địa bàn' },
+  { value: 'Yêu cầu khác', label: 'Yêu cầu khác' },
+];
+
 const RequestManagement = () => {
   const msg = useMessage();
   const [requests, setRequests] = useState([]);
@@ -316,17 +330,22 @@ const RequestManagement = () => {
         >
           <Form.Item
             name="title"
-            label="Tiêu đề"
-            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+            label="Loại yêu cầu"
+            rules={[{ required: true, message: 'Vui lòng chọn loại yêu cầu' }]}
           >
-            <Input placeholder="Nhập tiêu đề yêu cầu" />
+            <Select
+              placeholder="Chọn loại yêu cầu"
+              showSearch
+              optionFilterProp="label"
+              options={REQUEST_TYPES}
+            />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="Mô tả"
+            label="Ghi chú thêm (tùy chọn)"
           >
-            <TextArea rows={4} placeholder="Nhập mô tả chi tiết yêu cầu" />
+            <TextArea rows={3} placeholder="Mô tả chi tiết hoặc ghi chú thêm" />
           </Form.Item>
 
           <Form.Item

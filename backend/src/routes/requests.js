@@ -1,8 +1,33 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { getPool } from '../db/mssql.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const router = express.Router();
+
+const uploadsRequestsDir = path.join(__dirname, '../../uploads/requests');
+if (!fs.existsSync(uploadsRequestsDir)) {
+  fs.mkdirSync(uploadsRequestsDir, { recursive: true });
+}
+
+const multerComplete = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsRequestsDir),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname) || '';
+      const base = path.basename(file.originalname, ext) || 'attachment';
+      const safe = `${req.params.id}-${Date.now()}-${base.replace(/[^a-zA-Z0-9-_]/g, '_')}${ext}`;
+      cb(null, safe);
+    },
+  }),
+  limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 // Helper: map request row thành object an toàn
 function mapRequestRow(row) {
@@ -24,6 +49,9 @@ function mapRequestRow(row) {
     rejectedAt: row.RejectedAt,
     rejectionReason: row.RejectionReason,
     negotiationMessage: row.NegotiationMessage,
+    completionAttachmentPath: row.CompletionAttachmentPath,
+    completionAttachmentFileName: row.CompletionAttachmentFileName,
+    completionAttachmentMimeType: row.CompletionAttachmentMimeType,
     createdAt: row.CreatedAt,
     updatedAt: row.UpdatedAt,
   };
@@ -72,18 +100,28 @@ router.get('/', authenticate, async (req, res) => {
     request.input('Limit', parseInt(limit));
     
     // Kiểm tra bảng Requests có tồn tại không
+    let tableExists = true;
     try {
       await pool.request().query('SELECT TOP 1 * FROM Requests');
     } catch (tableError) {
-      if (tableError.message.includes('Invalid object name') || tableError.message.includes('does not exist')) {
-        return res.status(500).json({ 
-          message: 'Bảng Requests chưa được tạo. Vui lòng chạy: npm run create:requests-table',
-          error: process.env.NODE_ENV === 'development' ? tableError.message : undefined
-        });
+      const isMissingTable = (tableError.message || '')
+        .includes('Invalid object name') || (tableError.message || '').toLowerCase().includes("does not exist");
+      if (isMissingTable) {
+        tableExists = false;
+      } else {
+        throw tableError;
       }
-      throw tableError;
     }
-    
+
+    if (!tableExists) {
+      return res.json({
+        requests: [],
+        pagination: { page: parseInt(page), limit: parseInt(limit), total: 0, totalPages: 0 },
+        message: 'Bảng Requests chưa được tạo. Vui lòng chạy: npm run create:requests-table',
+      });
+    }
+
+    // LEFT JOIN để tránh lỗi khi user bị xóa; vẫn trả về request với tên null
     const result = await request.query(`
       SELECT 
         r.RequestId,
@@ -103,12 +141,15 @@ router.get('/', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
-      INNER JOIN Users ua ON r.AssignedTo = ua.UserId
-      INNER JOIN Roles ra ON ua.RoleId = ra.RoleId
-      INNER JOIN Users uc ON r.CreatedBy = uc.UserId
+      LEFT JOIN Users ua ON r.AssignedTo = ua.UserId
+      LEFT JOIN Roles ra ON ua.RoleId = ra.RoleId
+      LEFT JOIN Users uc ON r.CreatedBy = uc.UserId
       WHERE ${whereClause}
       ORDER BY 
         CASE r.Priority
@@ -120,7 +161,7 @@ router.get('/', authenticate, async (req, res) => {
       OFFSET @Offset ROWS
       FETCH NEXT @Limit ROWS ONLY
     `);
-    
+
     // Đếm tổng số
     const countRequest = pool.request();
     if (!isAdmin) {
@@ -135,7 +176,7 @@ router.get('/', authenticate, async (req, res) => {
     if (isAdmin && assignedTo) {
       countRequest.input('AssignedToFilter', parseInt(assignedTo));
     }
-    
+
     let countWhere = '1=1';
     if (!isAdmin) {
       countWhere += ' AND r.AssignedTo = @AssignedTo';
@@ -149,13 +190,13 @@ router.get('/', authenticate, async (req, res) => {
     if (isAdmin && assignedTo) {
       countWhere += ' AND r.AssignedTo = @AssignedToFilter';
     }
-    
+
     const countResult = await countRequest.query(`
       SELECT COUNT(*) AS total
       FROM Requests r
       WHERE ${countWhere}
     `);
-    
+
     const total = countResult.recordset[0].total;
     
     res.json({
@@ -175,9 +216,11 @@ router.get('/', authenticate, async (req, res) => {
       number: error.number,
       lineNumber: error.lineNumber,
     });
-    res.status(500).json({ 
+    const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+    res.status(500).json({
       message: 'Lỗi khi lấy danh sách yêu cầu',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: isDev ? error.message : undefined,
+      code: isDev ? error.code : undefined,
     });
   }
 });
@@ -253,6 +296,9 @@ router.get('/:id', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
@@ -430,6 +476,9 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
           r.RejectedAt,
           r.RejectionReason,
           r.NegotiationMessage,
+          r.CompletionAttachmentPath,
+          r.CompletionAttachmentFileName,
+          r.CompletionAttachmentMimeType,
           r.CreatedAt,
           r.UpdatedAt
         FROM Requests r
@@ -543,14 +592,13 @@ router.put('/:id/accept', authenticate, async (req, res) => {
     // Cập nhật status
     const updateRequest = pool.request();
     updateRequest.input('RequestId', parseInt(id));
-    const updateResult = await updateRequest.query(`
+    await updateRequest.query(`
       UPDATE Requests
       SET Status = 'Accepted',
           UpdatedAt = GETDATE()
       WHERE RequestId = @RequestId
-      OUTPUT INSERTED.*
     `);
-    
+
     // Lấy thông tin đầy đủ
     const fullRequest = pool.request();
     fullRequest.input('RequestId', parseInt(id));
@@ -573,6 +621,9 @@ router.put('/:id/accept', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
@@ -628,16 +679,15 @@ router.put('/:id/reject', authenticate, async (req, res) => {
     const updateRequest = pool.request();
     updateRequest.input('RequestId', parseInt(id));
     updateRequest.input('RejectionReason', rejectionReason || null);
-    const updateResult = await updateRequest.query(`
+    await updateRequest.query(`
       UPDATE Requests
       SET Status = 'Rejected',
           RejectedAt = GETDATE(),
           RejectionReason = @RejectionReason,
           UpdatedAt = GETDATE()
       WHERE RequestId = @RequestId
-      OUTPUT INSERTED.*
     `);
-    
+
     // Lấy thông tin đầy đủ
     const fullRequest = pool.request();
     fullRequest.input('RequestId', parseInt(id));
@@ -660,6 +710,9 @@ router.put('/:id/reject', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
@@ -720,16 +773,15 @@ router.put('/:id/negotiate', authenticate, async (req, res) => {
     updateRequest.input('RequestId', parseInt(id));
     updateRequest.input('NegotiatedDueDate', new Date(negotiatedDueDate));
     updateRequest.input('NegotiationMessage', negotiationMessage || null);
-    const updateResult = await updateRequest.query(`
+    await updateRequest.query(`
       UPDATE Requests
       SET Status = 'Negotiating',
           NegotiatedDueDate = @NegotiatedDueDate,
           NegotiationMessage = @NegotiationMessage,
           UpdatedAt = GETDATE()
       WHERE RequestId = @RequestId
-      OUTPUT INSERTED.*
     `);
-    
+
     // Lấy thông tin đầy đủ
     const fullRequest = pool.request();
     fullRequest.input('RequestId', parseInt(id));
@@ -752,6 +804,9 @@ router.put('/:id/negotiate', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
@@ -771,44 +826,73 @@ router.put('/:id/negotiate', authenticate, async (req, res) => {
   }
 });
 
-// PUT /api/v1/requests/:id/complete - Hoàn thành yêu cầu
-router.put('/:id/complete', authenticate, async (req, res) => {
+// PUT /api/v1/requests/:id/complete - Hoàn thành yêu cầu (có thể gửi kèm file đính kèm qua multipart)
+router.put('/:id/complete', authenticate, (req, res, next) => {
+  const isMultipart = req.is('multipart/form-data');
+  if (isMultipart) {
+    multerComplete.single('attachment')(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message || 'Lỗi tải file' });
+      next();
+    });
+  } else next();
+}, async (req, res) => {
   try {
     const { id } = req.params;
     const pool = await getPool();
     const request = pool.request();
     request.input('RequestId', parseInt(id));
     request.input('UserId', req.user.userId);
-    
+
     // Kiểm tra yêu cầu
     const checkResult = await request.query(`
       SELECT RequestId, Status, AssignedTo
       FROM Requests
       WHERE RequestId = @RequestId AND AssignedTo = @UserId
     `);
-    
+
     if (checkResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy yêu cầu hoặc bạn không có quyền' });
     }
-    
+
     const reqData = checkResult.recordset[0];
-    
+
     if (reqData.Status !== 'Accepted' && reqData.Status !== 'InProgress') {
       return res.status(400).json({ message: 'Yêu cầu chưa được chấp nhận' });
     }
-    
+
     // Cập nhật status
     const updateRequest = pool.request();
     updateRequest.input('RequestId', parseInt(id));
-    const updateResult = await updateRequest.query(`
+    await updateRequest.query(`
       UPDATE Requests
       SET Status = 'Completed',
           CompletedAt = GETDATE(),
           UpdatedAt = GETDATE()
       WHERE RequestId = @RequestId
-      OUTPUT INSERTED.*
     `);
-    
+
+    // Nếu có file đính kèm (nộp lại cho admin), cập nhật đường dẫn (nếu bảng đã có cột)
+    if (req.file) {
+      const relativePath = `requests/${path.basename(req.file.filename)}`;
+      const updateAtt = pool.request();
+      updateAtt.input('RequestId', parseInt(id));
+      updateAtt.input('Path', relativePath);
+      updateAtt.input('FileName', req.file.originalname || req.file.filename);
+      updateAtt.input('MimeType', req.file.mimetype || 'application/octet-stream');
+      try {
+        await updateAtt.query(`
+          UPDATE Requests
+          SET CompletionAttachmentPath = @Path,
+              CompletionAttachmentFileName = @FileName,
+              CompletionAttachmentMimeType = @MimeType,
+              UpdatedAt = GETDATE()
+          WHERE RequestId = @RequestId
+        `);
+      } catch (colErr) {
+        console.warn('Requests completion attachment columns may not exist. Run migration 004.', colErr.message);
+      }
+    }
+
     // Lấy thông tin đầy đủ
     const fullRequest = pool.request();
     fullRequest.input('RequestId', parseInt(id));
@@ -831,6 +915,9 @@ router.put('/:id/complete', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r
@@ -879,14 +966,13 @@ router.put('/:id/start', authenticate, async (req, res) => {
     // Cập nhật status
     const updateRequest = pool.request();
     updateRequest.input('RequestId', parseInt(id));
-    const updateResult = await updateRequest.query(`
+    await updateRequest.query(`
       UPDATE Requests
       SET Status = 'InProgress',
           UpdatedAt = GETDATE()
       WHERE RequestId = @RequestId
-      OUTPUT INSERTED.*
     `);
-    
+
     // Lấy thông tin đầy đủ
     const fullRequest = pool.request();
     fullRequest.input('RequestId', parseInt(id));
@@ -909,6 +995,9 @@ router.put('/:id/start', authenticate, async (req, res) => {
         r.RejectedAt,
         r.RejectionReason,
         r.NegotiationMessage,
+        r.CompletionAttachmentPath,
+        r.CompletionAttachmentFileName,
+        r.CompletionAttachmentMimeType,
         r.CreatedAt,
         r.UpdatedAt
       FROM Requests r

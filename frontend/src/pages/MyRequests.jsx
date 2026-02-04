@@ -6,6 +6,7 @@ import {
   Form,
   Input,
   DatePicker,
+  Select,
   Space,
   Tag,
   Card,
@@ -17,6 +18,7 @@ import {
   message,
   Popconfirm,
   Alert,
+  Upload,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -27,6 +29,7 @@ import {
   PlayCircleOutlined,
   CheckOutlined,
   MessageOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import requestsApi from '../api/requests';
@@ -61,6 +64,9 @@ const MyRequests = () => {
   const [filters, setFilters] = useState({ status: null, priority: null });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [actionModal, setActionModal] = useState({ visible: false, type: null });
+  const [completeModalVisible, setCompleteModalVisible] = useState(false);
+  const [completeFileList, setCompleteFileList] = useState([]);
+  const [apiMessage, setApiMessage] = useState(null);
   const [form] = Form.useForm();
   const [negotiateForm] = Form.useForm();
 
@@ -70,6 +76,7 @@ const MyRequests = () => {
 
   const loadRequests = async () => {
     setLoading(true);
+    setApiMessage(null);
     try {
       const params = {
         page: pagination.current,
@@ -80,8 +87,10 @@ const MyRequests = () => {
       const data = await requestsApi.getRequests(params);
       setRequests(data.requests || []);
       setTotal(data.pagination?.total || 0);
+      if (data.message) setApiMessage(data.message);
     } catch (error) {
-      msg.error('Lỗi khi tải danh sách yêu cầu');
+      const errMsg = error?.response?.data?.error || error?.response?.data?.message || 'Lỗi khi tải danh sách yêu cầu';
+      msg.error(errMsg);
       console.error('Error loading requests:', error);
     } finally {
       setLoading(false);
@@ -138,11 +147,26 @@ const MyRequests = () => {
     }
   };
 
-  const handleComplete = async (request) => {
+  const openCompleteModal = (request) => {
+    setSelectedRequest(request);
+    setCompleteFileList([]);
+    setCompleteModalVisible(true);
+  };
+
+  const handleComplete = async () => {
+    if (!selectedRequest) return;
     try {
-      await requestsApi.completeRequest(request.requestId);
-      msg.success('Đã hoàn thành yêu cầu');
+      let formData = null;
+      if (completeFileList.length > 0 && completeFileList[0].originFileObj) {
+        formData = new FormData();
+        formData.append('attachment', completeFileList[0].originFileObj);
+      }
+      await requestsApi.completeRequest(selectedRequest.requestId, formData);
+      msg.success('Đã hoàn thành và nộp lại yêu cầu cho Admin');
       loadRequests();
+      setCompleteModalVisible(false);
+      setSelectedRequest(null);
+      setCompleteFileList([]);
     } catch (error) {
       msg.error(error?.response?.data?.message || 'Lỗi khi hoàn thành yêu cầu');
     }
@@ -170,6 +194,7 @@ const MyRequests = () => {
           <Button
             key="accept"
             type="primary"
+            size="small"
             icon={<CheckCircleOutlined />}
             onClick={() => handleAccept(request)}
           >
@@ -180,6 +205,7 @@ const MyRequests = () => {
           <Button
             key="reject"
             danger
+            size="small"
             icon={<CloseCircleOutlined />}
             onClick={() => openActionModal(request, 'reject')}
           >
@@ -191,6 +217,7 @@ const MyRequests = () => {
           <Button
             key="accept"
             type="primary"
+            size="small"
             icon={<CheckCircleOutlined />}
             onClick={() => handleAccept(request)}
           >
@@ -200,10 +227,11 @@ const MyRequests = () => {
         buttons.push(
           <Button
             key="negotiate"
+            size="small"
             icon={<MessageOutlined />}
             onClick={() => openActionModal(request, 'negotiate')}
           >
-            Thương lượng thời gian
+            Thương lượng
           </Button>
         );
       } else if (request.priority === 'Red') {
@@ -212,10 +240,11 @@ const MyRequests = () => {
             key="accept"
             type="primary"
             danger
+            size="small"
             icon={<CheckCircleOutlined />}
             onClick={() => handleAccept(request)}
           >
-            Chấp nhận (Khẩn cấp)
+            Chấp nhận
           </Button>
         );
       }
@@ -224,10 +253,11 @@ const MyRequests = () => {
         <Button
           key="start"
           type="primary"
+          size="small"
           icon={<PlayCircleOutlined />}
           onClick={() => handleStart(request)}
         >
-          Bắt đầu làm việc
+          Bắt đầu
         </Button>
       );
     } else if (request.status === 'InProgress') {
@@ -235,8 +265,9 @@ const MyRequests = () => {
         <Button
           key="complete"
           type="primary"
+          size="small"
           icon={<CheckOutlined />}
-          onClick={() => handleComplete(request)}
+          onClick={() => openCompleteModal(request)}
         >
           Hoàn thành
         </Button>
@@ -246,15 +277,16 @@ const MyRequests = () => {
         <Button
           key="accept"
           type="primary"
+          size="small"
           icon={<CheckCircleOutlined />}
           onClick={() => handleAccept(request)}
         >
-          Chấp nhận thời gian mới
+          Chấp nhận thời gian
         </Button>
       );
     }
-    
-    return buttons.length > 0 ? <Space>{buttons}</Space> : null;
+
+    return buttons.length > 0 ? <Space size="small" wrap>{buttons}</Space> : null;
   };
 
   const columns = [
@@ -326,7 +358,8 @@ const MyRequests = () => {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 200,
+      width: 320,
+      fixed: 'right',
       render: (_, record) => getActionButtons(record),
     },
   ];
@@ -339,6 +372,15 @@ const MyRequests = () => {
           Xem và xử lý các yêu cầu được giao cho bạn
         </Text>
       </div>
+
+      {apiMessage && (
+        <Alert
+          type="info"
+          showIcon
+          message={apiMessage}
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
       <Card style={{ marginBottom: 24 }}>
         <Row gutter={16}>
@@ -460,7 +502,7 @@ const MyRequests = () => {
               </div>
             ),
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1280 }}
         />
       </Card>
 
@@ -537,6 +579,40 @@ const MyRequests = () => {
                 <TextArea rows={3} placeholder="Giải thích lý do cần thay đổi thời hạn" />
               </Form.Item>
             </Form>
+          </>
+        )}
+      </Modal>
+
+      {/* Modal hoàn thành và nộp lại (có thể đính kèm file cho Admin) */}
+      <Modal
+        title="Hoàn thành và nộp lại yêu cầu cho Admin"
+        open={completeModalVisible}
+        onCancel={() => {
+          setCompleteModalVisible(false);
+          setSelectedRequest(null);
+          setCompleteFileList([]);
+        }}
+        onOk={handleComplete}
+        okText="Hoàn thành và nộp lại"
+        cancelText="Hủy"
+      >
+        {selectedRequest && (
+          <>
+            <p style={{ marginBottom: 16, color: '#666' }}>
+              Bạn có thể đính kèm file (báo cáo, tài liệu) khi nộp lại yêu cầu cho Admin. File tùy chọn.
+            </p>
+            <Upload
+              maxCount={1}
+              fileList={completeFileList}
+              beforeUpload={(file) => {
+                setCompleteFileList([{ uid: file.uid, name: file.name, status: 'done', originFileObj: file }]);
+                return false;
+              }}
+              onRemove={() => setCompleteFileList([])}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+            >
+              <Button icon={<InboxOutlined />}>Chọn file đính kèm</Button>
+            </Upload>
           </>
         )}
       </Modal>

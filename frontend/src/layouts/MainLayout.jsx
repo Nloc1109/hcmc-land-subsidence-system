@@ -18,6 +18,7 @@ import {
   MailOutlined,
   SendOutlined,
   InboxOutlined,
+  FormOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth/useAuthStore';
 import notificationsApi from '../api/notifications';
@@ -29,7 +30,7 @@ const { Header, Content, Footer, Sider } = Layout;
 const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
@@ -78,7 +79,7 @@ const MainLayout = () => {
   const isViewer = userRole === 'Viewer';
   const isOperator = userRole === 'Operator';
   const isManager = userRole === 'Manager';
-  
+
   const menuItems = isAuthenticated
     ? [
         // Tất cả role đều có Trang chủ
@@ -143,7 +144,7 @@ const MainLayout = () => {
               },
             ]
           : []),
-        // Yêu cầu: Tất cả roles trừ Viewer
+        // Yêu cầu: Manager, Analyst, Operator, Admin (trừ Viewer)
         ...((isManager || isAnalyst || isOperator || isAdmin)
           ? [
               {
@@ -216,46 +217,53 @@ const MainLayout = () => {
     <Layout className={`main-layout ${hasSidebar ? 'has-sidebar' : ''} ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <CookieConsent />
       {hasSidebar && (
-        <Sider 
-          className="main-sider"
-          width={250}
-          collapsedWidth={60}
-          theme="light"
-          collapsible
-          collapsed={collapsed}
-          trigger={null}
-          style={{ position: 'fixed', left: 0, top: 0, bottom: 0 }}
+        <div
+          className="main-sider-wrapper"
+          style={{ width: collapsed ? 60 : 250 }}
+          onMouseEnter={() => setCollapsed(false)}
+          onMouseLeave={() => setCollapsed(true)}
         >
-          <div className="sidebar-header">
-            <Button
-              type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              className="hamburger-button-sidebar"
-            />
-          </div>
-          <div className="sidebar-logo" onClick={() => navigate('/')}>
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-            {!collapsed && <h1>HCM Land Subsidence</h1>}
-          </div>
-          <Menu
+          <Sider 
+            className="main-sider"
+            width={250}
+            collapsedWidth={60}
             theme="light"
-            mode="inline"
-            selectedKeys={getSelectedKeys()}
-            defaultOpenKeys={isAdmin ? ['admin'] : []}
-            items={menuItems}
-            onClick={handleMenuClick}
-            className="sidebar-menu"
-            inlineCollapsed={collapsed}
-          />
-        </Sider>
+            collapsible
+            collapsed={collapsed}
+            trigger={null}
+            style={{ position: 'fixed', left: 0, top: 0, bottom: 0 }}
+          >
+            <div className="sidebar-header">
+              <Button
+                type="text"
+                icon={<MenuOutlined />}
+                className="hamburger-button-sidebar"
+                title="Di chuột vào đây để mở menu"
+              />
+            </div>
+            <div className="sidebar-logo" onClick={() => navigate('/')}>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+              {!collapsed && <h1>HCM Land Subsidence</h1>}
+            </div>
+            <Menu
+              theme="light"
+              mode="inline"
+              selectedKeys={getSelectedKeys()}
+              defaultOpenKeys={isAdmin ? ['admin'] : []}
+              items={menuItems}
+              onClick={handleMenuClick}
+              className="sidebar-menu"
+              inlineCollapsed={collapsed}
+            />
+          </Sider>
+        </div>
       )}
       <Layout className="main-layout-content">
         <Header className={`main-header ${headerVisible ? 'header-visible' : 'header-hidden'}`}>
@@ -287,6 +295,17 @@ const MainLayout = () => {
                       className="header-inbox-btn"
                     />
                   </Badge>
+                  {(isManager || isAnalyst || isOperator || isAdmin) && (
+                    <Button
+                      type="text"
+                      icon={<FormOutlined />}
+                      onClick={() => navigate(isAdmin ? '/admin/requests' : '/my-requests')}
+                      title="Yêu cầu"
+                      className="header-request-btn"
+                    >
+                      Yêu cầu
+                    </Button>
+                  )}
                   <span>{user?.username}</span>
                   {user?.role && <Tag color="blue">{user.role}</Tag>}
                   <Button

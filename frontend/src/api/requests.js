@@ -86,14 +86,20 @@ const requestsApi = {
     return response.data;
   },
 
-  // Hoàn thành yêu cầu
-  completeRequest: async (id) => {
+  // Hoàn thành yêu cầu (có thể gửi kèm file đính kèm khi nộp lại cho admin)
+  completeRequest: async (id, formData = null) => {
     const token = localStorage.getItem('auth_token');
-    const response = await axios.put(`${API_BASE_URL}/v1/requests/${id}/complete`, {}, {
+    const config = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    };
+    if (formData) {
+      config.maxBodyLength = Infinity;
+      config.maxContentLength = Infinity;
+    }
+    const body = formData || {};
+    const response = await axios.put(`${API_BASE_URL}/v1/requests/${id}/complete`, body, config);
     return response.data;
   },
 

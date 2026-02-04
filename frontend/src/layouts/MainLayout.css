@@ -9,6 +9,15 @@
   min-height: 100vh;
 }
 
+.main-sider-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: width 0.2s ease;
+}
+
 .main-sider {
   position: fixed;
   left: 0;

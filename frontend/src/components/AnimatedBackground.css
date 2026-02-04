@@ -1,4 +1,6 @@
-.animated-background {
+/* Background: tuyết rơi chậm, nhẹ nhàng, đỡ đau mắt */
+
+.animated-background.snowfall {
   position: fixed;
   top: 0;
   left: 0;
@@ -9,216 +11,67 @@
   pointer-events: none;
 }
 
-/* Parallax wrapper - di chuyển theo chuột */
-.parallax-wrapper {
+/* Nền trời nhạt, dịu */
+.snowfall-base {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  transition: transform 0.1s ease-out;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #e8ecf2 0%,
+    #eef2f6 30%,
+    #f2f5f9 60%,
+    #e8ecf2 100%
+  );
+}
+
+/* Container tuyết */
+.snowfall-flakes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Một bông tuyết - rõ hơn trên nền sáng */
+.snowflake {
+  position: absolute;
+  top: -10%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 2px rgba(200, 220, 240, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  animation: snowfall linear infinite;
   will-change: transform;
 }
 
-/* Base gradient background - Sáng nhẹ nhàng, tự nhiên */
-.bg-base-gradient {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    #f5ede8 0%,
-    #f0e8e0 25%,
-    #ebe4dd 50%,
-    #f0e8e0 75%,
-    #f5ede8 100%
-  );
-  background-size: 400% 400%;
-  animation: gradientShift 12s ease infinite;
-  transition: transform 0.1s ease-out;
-}
-
-@keyframes gradientShift {
+@keyframes snowfall {
   0% {
-    background-position: 0% 50%;
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(25vh) translateX(var(--snow-drift, 0));
   }
   50% {
-    background-position: 100% 50%;
+    transform: translateY(50vh) translateX(calc(var(--snow-drift, 0) * 0.5));
+  }
+  75% {
+    transform: translateY(75vh) translateX(var(--snow-drift, 0));
   }
   100% {
-    background-position: 0% 50%;
+    transform: translateY(110vh) translateX(calc(var(--snow-drift, 0) * 1.2));
   }
 }
 
-/* Animated stripes - Layer 1: Horizontal - Light theme */
-.bg-stripes-1 {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(37, 99, 235, 0.08) 2px,
-    rgba(37, 99, 235, 0.08) 4px
-  );
-  background-size: 100% 60px;
-  animation: stripeMove1 10s linear infinite;
-  opacity: 0.7;
-}
-
-/* Animated stripes - Layer 2: Diagonal (45deg) */
-.bg-stripes-2 {
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 3px,
-    rgba(180, 83, 9, 0.06) 3px,
-    rgba(180, 83, 9, 0.06) 6px
-  );
-  background-size: 80px 80px;
-  animation: stripeMove2 12s linear infinite;
-  opacity: 0.6;
-}
-
-/* Animated stripes - Layer 3: Diagonal (-45deg) */
-.bg-stripes-3 {
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 4px,
-    rgba(37, 99, 235, 0.05) 4px,
-    rgba(37, 99, 235, 0.05) 8px
-  );
-  background-size: 100px 100px;
-  animation: stripeMove3 15s linear infinite;
-  opacity: 0.5;
-}
-
-/* Animated stripes - Layer 4: Vertical */
-.bg-stripes-4 {
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 2px,
-    rgba(180, 83, 9, 0.05) 2px,
-    rgba(180, 83, 9, 0.05) 4px
-  );
-  background-size: 50px 100%;
-  animation: stripeMove4 14s linear infinite;
-  opacity: 0.5;
-}
-
-/* Common stripe styles */
-.bg-stripes {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  will-change: transform;
-  transition: transform 0.1s ease-out;
-}
-
-/* Stripe animations */
-@keyframes stripeMove1 {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(120px);
-  }
-}
-
-@keyframes stripeMove2 {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  100% {
-    transform: translate(160px, 160px) rotate(360deg);
-  }
-}
-
-@keyframes stripeMove3 {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  100% {
-    transform: translate(-200px, 200px) rotate(-360deg);
-  }
-}
-
-@keyframes stripeMove4 {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(100px);
-  }
-}
-
-/* Subtle grid overlay - Light theme */
-.bg-grid {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-  background-size: 80px 80px;
-  opacity: 0.6;
-  animation: gridMove 20s linear infinite;
-  transition: transform 0.1s ease-out;
-}
-
-@keyframes gridMove {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(160px, 160px);
-  }
-}
-
-/* Add subtle effect to stripes for light theme */
-.bg-stripes-1,
-.bg-stripes-2,
-.bg-stripes-3,
-.bg-stripes-4 {
-  filter: blur(0.3px);
-  mix-blend-mode: multiply;
-}
-
-/* Responsive adjustments */
+/* Giảm chuyển động trên mobile để đỡ tốn pin */
 @media (max-width: 768px) {
-  .bg-stripes-1 {
-    background-size: 100% 40px;
-  }
-  
-  .bg-stripes-2 {
-    background-size: 60px 60px;
-  }
-  
-  .bg-stripes-3 {
-    background-size: 80px 80px;
-  }
-  
-  .bg-stripes-4 {
-    background-size: 40px 100%;
-  }
-  
-  .bg-grid {
-    background-size: 60px 60px;
-  }
-  
-  .bg-stripes-1,
-  .bg-stripes-2,
-  .bg-stripes-3,
-  .bg-stripes-4 {
-    opacity: 0.2;
+  .snowflake {
+    animation-duration: 40s !important;
   }
 }
 
-/* Performance optimization */
-.animated-background * {
-  will-change: transform;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+@media (prefers-reduced-motion: reduce) {
+  .snowflake {
+    animation-duration: 60s !important;
+  }
 }

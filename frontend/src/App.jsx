@@ -46,7 +46,7 @@ function App() {
                 <Route path="reports" element={<ReportsPage />} />
               </Route>
               
-              <Route element={<RoleBasedRoute allowedRoles={['Analyst', 'Admin']} />}>
+              <Route element={<RoleBasedRoute allowedRoles={['Analyst', 'Admin', 'Manager']} />}>
                 <Route path="analysis" element={<DeepAnalysisPage />} />
               </Route>
               

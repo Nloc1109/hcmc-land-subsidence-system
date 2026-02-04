@@ -464,7 +464,6 @@ const ReportsPage = () => {
   const [view, setView] = useState(VIEW_MAIN);
   const [districtData, setDistrictData] = useState([]);
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
   const [weatherRainfallData, setWeatherRainfallData] = useState([]);
   const [weatherRainfallLoading, setWeatherRainfallLoading] = useState(false);
   const [weatherPastDays, setWeatherPastDays] = useState(7);
@@ -489,7 +488,6 @@ const ReportsPage = () => {
     ];
     return lines.join('\n');
   }, [weatherRainfallData, weatherPastDays]);
-=======
   const [overviewStats, setOverviewStats] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [districtStats, setDistrictStats] = useState([]);
@@ -513,7 +511,6 @@ const ReportsPage = () => {
     
     loadOverviewData();
   }, []);
->>>>>>> d2e356f0c96a2d197108cad1157470d9cda29705
 
   useEffect(() => {
     if (view !== VIEW_DISTRICT_STATS) return;
@@ -876,7 +873,6 @@ const ReportsPage = () => {
         </div>
       </div>
 
-<<<<<<< HEAD
       <Row gutter={[32, 32]} className="reports-summary-row">
         <Col xs={24} md={8}>
           <Card className="page-card reports-summary-card" title="Tổng quan toàn thành phố">
@@ -900,7 +896,6 @@ const ReportsPage = () => {
           </Card>
         </Col>
       </Row>
-=======
       {overviewLoading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <Spin size="large" />
@@ -1037,7 +1032,6 @@ const ReportsPage = () => {
           </Row>
         </>
       )}
->>>>>>> d2e356f0c96a2d197108cad1157470d9cda29705
 
       <Divider className="reports-divider" />
 
