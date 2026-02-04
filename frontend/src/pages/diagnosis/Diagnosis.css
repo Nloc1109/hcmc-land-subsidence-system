@@ -337,6 +337,22 @@
   margin-right: auto;
 }
 
+/* ----- Thống kê lượng mưa theo quận ----- */
+.diagnosis-rainfall-card .diagnosis-list-hint {
+  margin-bottom: 16px;
+}
+
+.diagnosis-rainfall-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.diagnosis-rainfall-actions .ant-select {
+  flex-shrink: 0;
+}
+
 /* ----- Quy trình ----- */
 .diagnosis-process-card {
   margin-top: 24px;

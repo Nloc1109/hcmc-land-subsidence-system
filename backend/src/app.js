@@ -113,32 +113,9 @@ app.get('/api/news/subsidence', async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
     console.log('🔄 Đang tải tin tức...');
     const startTime = Date.now();
 
-    // Tạo timeout promise để tránh chờ quá lâu
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
-    });
-
-    const completionPromise = openaiClient.chat.completions.create({
-      model: 'gpt-4o', // Model mới nhất, nhanh nhất và mạnh nhất của OpenAI (tháng 5/2024)
-      response_format: { type: 'json_object' },
-      temperature: 0.7, // Độ sáng tạo vừa phải
-      max_tokens: 3000, // Giới hạn token để tăng tốc độ xử lý (giảm vì chỉ cần 7-8 tin)
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Bạn là hệ thống tổng hợp tin tức về sụt lún đất, ngập và lún nền tại Việt Nam. Trả về JSON đúng cú pháp để frontend hiển thị.',
-        },
-        {
-          role: 'user',
-          content: `
-Hãy tạo danh sách 7-8 tin tức gần đây (mô phỏng nhưng sát thực tế) về:
-- Sụt lún đất, lún nền, ngập do lún tại TP.HCM (ưu tiên ít nhất 4 tin).
-=======
     const since = req.query.since; // ISO string, e.g. 2025-01-28T10:00:00.000Z
 
     const userContent = since
@@ -148,9 +125,8 @@ Chỉ tạo các tin tức MỚI từ ngày ${since.slice(0, 10)} đến nay (m�
 TRẢ VỀ DUY NHẤT MỘT JSON OBJECT: { "items": [ { "id", "title", "source", "publishedAt", "location", "summary", "url", "tags" } ] }
 `.trim()
       : `
-Hãy tạo danh sách 10–15 tin tức gần đây (mô phỏng nhưng sát thực tế) về:
-- Sụt lún đất, lún nền, ngập do lún tại TP.HCM (ưu tiên ít nhất 5 tin).
->>>>>>> 4d5c4f3ae2e03f4ab3053e01e68054662b3091a7
+Hãy tạo danh sách 7-8 tin tức gần đây (mô phỏng nhưng sát thực tế) về:
+- Sụt lún đất, lún nền, ngập do lún tại TP.HCM (ưu tiên ít nhất 4 tin).
 - Các khu vực còn lại tại Việt Nam (miền Tây, miền Trung, Hà Nội, ven biển, v.v.).
 
 TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
@@ -159,7 +135,7 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
     {
       "id": "một id ngắn gọn, duy nhất",
       "title": "Tiêu đề ngắn gọn, dễ hiểu",
-      "source": "Tên báo hoặc cơ quan (ví dụ: VnExpress, Tuổi Trẻ, Báo Tài nguyên & Môi trường, ... hoặc 'Mô phỏng dữ liệu')",
+      "source": "Tên báo hoặc cơ quan (ví dụ: VnExpress, Tuổi Trẻ, ... hoặc 'Mô phỏng dữ liệu')",
       "publishedAt": "YYYY-MM-DD",
       "location": "TP.HCM | Hà Nội | Đồng bằng sông Cửu Long | Miền Trung | ...",
       "summary": "Đoạn tóm tắt 2–3 câu tiếng Việt, tập trung vào vấn đề sụt lún/ngập và nguyên nhân/chỉ số chính.",
@@ -168,41 +144,32 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
     }
   ]
 }
-<<<<<<< HEAD
-QUAN TRỌNG: 
-- Trường "url" phải là URL THẬT từ các trang báo Việt Nam về sụt lún đất, ngập lụt, lún nền.
-- Các nguồn hợp lệ: vnexpress.net, tuoitre.vn, thanhnien.vn, nld.com.vn, dantri.com.vn, vietnamnet.vn
-- Tìm và sử dụng URL thật từ các bài báo đã xuất bản về chủ đề này (có thể tìm trong lịch sử tin tức).
-- URL phải bắt đầu bằng https:// và có thể truy cập được.
-- Nếu không tìm được URL thật, có thể dùng URL trang chủ của nguồn báo (ví dụ: https://vnexpress.net/tim-kiem?q=sut+lun+dat)
-`.trim(),
-=======
+QUAN TRỌNG: Trường "url" phải là URL thật từ báo Việt Nam (vnexpress.net, tuoitre.vn, ...) hoặc https://... nếu không có.
 `.trim();
 
-    const completion = await openaiClient.chat.completions.create({
-      model: 'gpt-4.1',
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
+    });
+
+    const completionPromise = openaiClient.chat.completions.create({
+      model: 'gpt-4o',
       response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 3000,
       messages: [
         {
           role: 'system',
           content:
             'Bạn là hệ thống tổng hợp tin tức về sụt lún đất, ngập và lún nền tại Việt Nam. Trả về JSON đúng cú pháp để frontend hiển thị.',
->>>>>>> 4d5c4f3ae2e03f4ab3053e01e68054662b3091a7
         },
         { role: 'user', content: userContent },
       ],
     });
 
-    // Race giữa completion và timeout
     const completion = await Promise.race([completionPromise, timeoutPromise]);
-    
     const raw = completion.choices[0]?.message?.content;
-<<<<<<< HEAD
     const elapsedTime = Date.now() - startTime;
-    console.log(`✅ Đã tải tin tức trong ${elapsedTime}ms`);
 
-=======
->>>>>>> 4d5c4f3ae2e03f4ab3053e01e68054662b3091a7
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed.items)) {
       return res.status(500).json({
@@ -210,7 +177,7 @@ QUAN TRỌNG:
       });
     }
 
-    console.log(`📰 Đã tải ${parsed.items.length} tin tức`);
+    console.log(`📰 Đã tải ${parsed.items.length} tin tức trong ${elapsedTime}ms`);
     res.json({
       items: parsed.items,
       generatedAt: new Date().toISOString(),
