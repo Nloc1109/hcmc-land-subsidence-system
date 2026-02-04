@@ -1,28 +1,4 @@
-.reports-page {
-  padding: 72px 40px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.reports-header {
-  margin-bottom: 32px;
-}
-
-.reports-header .ant-typography h2 {
-  color: #1e293b !important;
-  font-weight: 800;
-}
-
-.reports-header .ant-typography p {
-  color: #64748b;
-}
-
-.reports-card {
-  background: #f5f7fa !important;
-  border-radius: 20px;
-  border: 1px solid #b8c5d1 !important;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-}
+/* Reports specific styles - sử dụng page-container từ pages.css */
 
 .reports-district-section {
   margin-top: 40px;
@@ -78,3 +54,46 @@
   font-weight: 500;
 }
 
+.reports-city-overview {
+  margin-top: 48px;
+}
+
+.reports-city-overview .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* CTA: chỉ khi chọn mới load thống kê */
+.reports-district-cta {
+  margin-top: 24px;
+}
+
+.reports-district-cta-card .reports-district-cta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.reports-district-cta-btn {
+  min-width: 280px;
+}
+
+/* Sub-view: thống kê theo quận/huyện & phường/xã */
+.reports-sub-view .reports-sub-view-header {
+  margin-bottom: 24px;
+}
+
+.reports-sub-view .reports-back-btn {
+  margin-bottom: 16px;
+}
+
+.reports-sub-view .reports-sub-view-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: 48px;
+}

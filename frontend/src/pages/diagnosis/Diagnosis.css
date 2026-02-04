@@ -1,16 +1,363 @@
+/* ===== Diagnosis page - Chẩn đoán khu vực ===== */
+
 .diagnosis-page {
-  padding: 72px 40px;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
+  padding: 24px 20px 48px;
 }
 
-.diagnosis-header {
-  margin-bottom: 32px;
+/* ----- Hero ----- */
+.diagnosis-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
+.diagnosis-hero-content {
+  flex: 1;
+  min-width: 280px;
+}
+
+.diagnosis-hero-title {
+  margin-bottom: 8px !important;
+  font-size: 1.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--text-primary) !important;
+}
+
+.diagnosis-hero-title .diagnosis-hero-icon {
+  margin-right: 10px;
+  color: var(--accent-color);
+}
+
+.diagnosis-hero-desc {
+  margin-bottom: 0 !important;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 560px;
+}
+
+.diagnosis-hero-stats {
+  display: flex;
+  gap: 32px;
+  flex-shrink: 0;
+}
+
+.diagnosis-hero-stats .ant-statistic-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.diagnosis-hero-stats .ant-statistic-content {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .diagnosis-hero {
+    flex-direction: column;
+    padding: 20px;
+  }
+  .diagnosis-hero-stats {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 24px;
+  }
+}
+
+/* ----- Cards chung ----- */
 .diagnosis-card {
-  background: #f5f7fa !important;
-  border-radius: 20px;
-  border: 1px solid #b8c5d1 !important;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
 }
 
+.diagnosis-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.diagnosis-card .ant-card-body {
+  padding: 20px 24px;
+}
+
+.diagnosis-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.diagnosis-card-icon {
+  font-size: 1.2rem;
+  color: var(--accent-color);
+}
+
+.diagnosis-card-header--actions {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.diagnosis-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diagnosis-report-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ----- Bản đồ ----- */
+.diagnosis-map-card {
+  margin-bottom: 24px;
+}
+
+.diagnosis-map-card .diagnosis-card-header {
+  margin-bottom: 12px;
+}
+
+.diagnosis-map-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+}
+
+.diagnosis-map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 24px;
+}
+
+/* ----- Lọc theo mức rủi ro ----- */
+.diagnosis-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.diagnosis-filter-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.diagnosis-filter-label .anticon {
+  margin-right: 6px;
+  color: var(--accent-color);
+}
+
+/* ----- Danh sách khu vực ----- */
+.diagnosis-list-hint {
+  margin-bottom: 14px !important;
+  font-size: 13px;
+}
+
+.diagnosis-area-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.diagnosis-area-item {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.diagnosis-area-item:hover {
+  border-color: var(--accent-color);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.diagnosis-area-item--selected {
+  border-color: var(--accent-color);
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.diagnosis-area-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.diagnosis-area-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.diagnosis-risk-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+.diagnosis-area-item-meta {
+  font-size: 12px;
+}
+
+.diagnosis-area-item-meta strong {
+  color: var(--text-primary);
+}
+
+/* ----- Chi tiết chẩn đoán ----- */
+.diagnosis-detail-card .diagnosis-detail-content {
+  padding: 4px 0;
+}
+
+.diagnosis-detail-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.diagnosis-detail-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.diagnosis-detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+.diagnosis-detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diagnosis-detail-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.diagnosis-detail-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ----- Khuyến nghị ----- */
+.diagnosis-recommendations {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.diagnosis-recommendations li {
+  margin-bottom: 8px;
+}
+
+.diagnosis-recommendations li:last-child {
+  margin-bottom: 0;
+}
+
+/* ----- Cảnh báo ----- */
+.diagnosis-alert-item {
+  padding: 10px 0 !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.diagnosis-alert-item:last-child {
+  border-bottom: none;
+}
+
+.diagnosis-clear-selection {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.diagnosis-clear-selection:hover {
+  color: var(--accent-color);
+}
+
+/* ----- Placeholder khi chưa chọn ----- */
+.diagnosis-placeholder-card .ant-card-body {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diagnosis-placeholder {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.diagnosis-placeholder-icon {
+  font-size: 48px;
+  color: var(--border-color);
+  margin-bottom: 12px;
+}
+
+.diagnosis-placeholder .ant-typography h5 {
+  margin-bottom: 8px !important;
+}
+
+.diagnosis-placeholder .ant-typography p {
+  margin-bottom: 0 !important;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ----- Quy trình ----- */
+.diagnosis-process-card {
+  margin-top: 24px;
+}
+
+.diagnosis-steps.ant-steps-horizontal {
+  gap: 16px;
+}
+
+.diagnosis-steps .ant-steps-item-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.diagnosis-steps .ant-steps-item-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 992px) {
+  .diagnosis-steps.ant-steps-horizontal {
+    flex-direction: column;
+  }
+}

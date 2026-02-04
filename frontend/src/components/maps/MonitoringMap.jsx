@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -11,22 +11,33 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const MonitoringMap = ({ areas = [], height = '400px' }) => {
+/** Khi có selectedPosition thì flyTo vị trí đó (dùng trong MapContainer) */
+function MapFlyTo({ selectedPosition, zoom = 14 }) {
+  const map = useMap();
+  useEffect(() => {
+    if (selectedPosition && selectedPosition.lat != null && selectedPosition.lng != null) {
+      map.flyTo([selectedPosition.lat, selectedPosition.lng], zoom, { duration: 0.8 });
+    }
+  }, [selectedPosition, zoom, map]);
+  return null;
+}
+
+const MonitoringMap = ({ areas = [], height = '400px', selectedPosition = null }) => {
   const mapRef = useRef(null);
 
   // Default center: TPHCM
   const defaultCenter = [10.7769, 106.7009];
   const defaultZoom = 11;
 
-  // Tính toán bounds để fit tất cả markers
+  // Tính toán bounds để fit tất cả markers (chỉ khi chưa có selectedPosition)
   useEffect(() => {
-    if (mapRef.current && areas.length > 0) {
+    if (mapRef.current && areas.length > 0 && !selectedPosition) {
       const bounds = L.latLngBounds(
         areas.map(area => [area.latitude, area.longitude])
       );
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [areas]);
+  }, [areas, selectedPosition]);
 
   // Màu sắc theo risk level
   const getRiskColor = (riskLevel) => {
@@ -68,6 +79,7 @@ const MonitoringMap = ({ areas = [], height = '400px' }) => {
         ref={mapRef}
         scrollWheelZoom={true}
       >
+        <MapFlyTo selectedPosition={selectedPosition} zoom={14} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

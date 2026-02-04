@@ -6,14 +6,8 @@ import {
   Card, 
   Statistic, 
   Button, 
-  Space, 
-  Tag, 
-  List, 
-  Avatar, 
-  Progress,
-  Empty,
-  Spin,
-  Alert
+  Space,
+  Spin
 } from 'antd';
 import { 
   EnvironmentOutlined, 
@@ -22,27 +16,14 @@ import {
   GlobalOutlined,
   ArrowRightOutlined,
   ThunderboltOutlined,
-  SafetyOutlined,
   DashboardOutlined,
-  BellOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  NotificationOutlined,
-  SearchOutlined,
-  RobotOutlined
+  FileTextOutlined,
+  CalendarOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import 'dayjs/locale/vi';
-import MonitoringMap from '../components/maps/MonitoringMap';
-import SubsidenceChart from '../components/charts/SubsidenceChart';
 import dashboardApi from '../api/dashboard';
 import './Home.css';
-
-dayjs.extend(relativeTime);
-dayjs.locale('vi');
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -50,11 +31,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
-  const [trendData, setTrendData] = useState([]);
-  const [districtStats, setDistrictStats] = useState([]);
-  const [recentAlerts, setRecentAlerts] = useState([]);
-  const [deviceStatus, setDeviceStatus] = useState(null);
-  const [monitoringAreas, setMonitoringAreas] = useState([]);
+  const [news, setNews] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -63,39 +40,58 @@ const HomePage = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Load tất cả data song song
-      const [
-        statsData,
-        trendDataResult,
-        districtData,
-        alertsData,
-        deviceData,
-      ] = await Promise.all([
-        dashboardApi.getDashboardStats(),
-        dashboardApi.getSubsidenceTrend(30),
-        dashboardApi.getDistrictStats(),
-        dashboardApi.getRecentAlerts(5),
-        dashboardApi.getDeviceStatus(),
-      ]);
-
+      const statsData = await dashboardApi.getDashboardStats();
       setStats(statsData);
-      setTrendData(trendDataResult);
-      setDistrictStats(districtData);
-      setRecentAlerts(alertsData);
-      setDeviceStatus(deviceData);
-
-      // Tạo mock data cho monitoring areas từ district stats
-      const areas = districtData.map((district, index) => ({
-        areaId: index + 1,
-        areaCode: `AREA-${String(index + 1).padStart(3, '0')}`,
-        areaName: `Khu vực ${district.districtName}`,
-        districtName: district.districtName,
-        latitude: 10.7769 + (Math.random() - 0.5) * 0.1,
-        longitude: 106.7009 + (Math.random() - 0.5) * 0.1,
-        riskLevel: district.riskLevel,
-        avgSubsidenceRate: district.avgRate,
-      }));
-      setMonitoringAreas(areas);
+      
+      // Mock data cho tin tức nổi bật
+      const mockNews = [
+        {
+          id: 1,
+          title: 'Hệ thống giám sát sụt lún đất tại Quận 1 hoạt động hiệu quả',
+          summary: 'Hệ thống giám sát mới được triển khai tại khu vực trung tâm thành phố đã ghi nhận hiệu quả cao trong việc phát hiện sớm các dấu hiệu sụt lún.',
+          date: '2024-01-15',
+          views: 1250,
+          category: 'Công nghệ',
+          image: 'https://via.placeholder.com/300x200?text=News+1'
+        },
+        {
+          id: 2,
+          title: 'Cảnh báo sụt lún tại khu vực Quận 7 - Cần theo dõi sát sao',
+          summary: 'Hệ thống đã phát hiện dấu hiệu sụt lún bất thường tại một số khu vực thuộc Quận 7, các cơ quan chức năng đang tiến hành kiểm tra.',
+          date: '2024-01-14',
+          views: 980,
+          category: 'Cảnh báo',
+          image: 'https://via.placeholder.com/300x200?text=News+2'
+        },
+        {
+          id: 3,
+          title: 'Hội thảo về giải pháp chống sụt lún đất tại TP.HCM',
+          summary: 'Hội thảo quốc tế về các giải pháp công nghệ mới trong phòng chống sụt lún đất sẽ được tổ chức vào tháng tới.',
+          date: '2024-01-12',
+          views: 756,
+          category: 'Sự kiện',
+          image: 'https://via.placeholder.com/300x200?text=News+3'
+        },
+        {
+          id: 4,
+          title: 'Nâng cấp hệ thống cảm biến giám sát tại 24 quận huyện',
+          summary: 'Dự án nâng cấp hệ thống cảm biến giám sát sụt lún đất tại tất cả các quận huyện đã hoàn thành giai đoạn 1.',
+          date: '2024-01-10',
+          views: 643,
+          category: 'Dự án',
+          image: 'https://via.placeholder.com/300x200?text=News+4'
+        },
+        {
+          id: 5,
+          title: 'Báo cáo thường niên về tình trạng sụt lún đất năm 2023',
+          summary: 'Báo cáo tổng hợp về tình trạng sụt lún đất tại TP.HCM năm 2023 đã được công bố với nhiều số liệu quan trọng.',
+          date: '2024-01-08',
+          views: 1120,
+          category: 'Báo cáo',
+          image: 'https://via.placeholder.com/300x200?text=News+5'
+        }
+      ];
+      setNews(mockNews);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -103,41 +99,6 @@ const HomePage = () => {
     }
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'Critical':
-      case 'Emergency':
-        return '#ef4444';
-      case 'Warning':
-        return '#f59e0b';
-      case 'Info':
-        return '#3b82f6';
-      default:
-        return '#6b7280';
-    }
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'Critical':
-      case 'Emergency':
-        return <CloseCircleOutlined />;
-      case 'Warning':
-        return <ExclamationCircleOutlined />;
-      default:
-        return <CheckCircleOutlined />;
-    }
-  };
-
-  const getRiskLevelColor = (riskLevel) => {
-    switch (riskLevel) {
-      case 'Critical': return 'red';
-      case 'High': return 'orange';
-      case 'Medium': return 'blue';
-      case 'Low': return 'green';
-      default: return 'default';
-    }
-  };
 
   if (loading) {
     return (
@@ -149,8 +110,11 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero-section">
+      <Row gutter={[24, 0]} style={{ margin: 0 }}>
+        {/* Main Content - Left */}
+        <Col xs={24} lg={16} className="main-content-col">
+          {/* Hero Section */}
+          <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
             <ThunderboltOutlined /> Hệ thống giám sát thời gian thực
@@ -170,94 +134,20 @@ const HomePage = () => {
             <Button 
               type="primary" 
               size="large"
-              icon={<BarChartOutlined />}
-              onClick={() => navigate('/reports')}
+              icon={<DashboardOutlined />}
+              onClick={() => navigate('/monitoring')}
             >
-              Xem báo cáo tổng quan
+              Xem bản đồ giám sát
             </Button>
             <Button 
               size="large"
-              icon={<RobotOutlined />}
-              onClick={() => navigate('/ai-prediction')}
+              icon={<BarChartOutlined />}
+              onClick={() => navigate('/reports')}
             >
-              AI dự đoán thiên tai
+              Xem báo cáo
             </Button>
           </Space>
         </div>
-      </section>
-
-      {/* Navigation Section for main modules */}
-      <section className="nav-modules-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">
-            Điều hướng nhanh các mô-đun
-          </Title>
-          <Text className="section-subtitle">
-            Chọn nhanh chức năng bạn muốn sử dụng sau khi đăng nhập hệ thống.
-          </Text>
-        </div>
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/reports')}
-            >
-              <div className="nav-module-icon nav-module-icon-primary">
-                <BarChartOutlined />
-              </div>
-              <Title level={4}>Báo cáo</Title>
-              <Paragraph type="secondary">
-                Xem thống kê, biểu đồ và báo cáo chi tiết theo khu vực, thời gian và chỉ số.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/news')}
-            >
-              <div className="nav-module-icon nav-module-icon-info">
-                <NotificationOutlined />
-              </div>
-              <Title level={4}>Tin tức</Title>
-              <Paragraph type="secondary">
-                Cập nhật nhanh các tin tức, khuyến nghị và thông báo liên quan đến sụt lún.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/diagnosis')}
-            >
-              <div className="nav-module-icon nav-module-icon-warning">
-                <SearchOutlined />
-              </div>
-              <Title level={4}>Chuẩn đoán</Title>
-              <Paragraph type="secondary">
-                Đánh giá nhanh mức độ rủi ro của từng khu vực dựa trên dữ liệu quan trắc.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={6}>
-            <Card
-              hoverable
-              className="nav-module-card"
-              onClick={() => navigate('/ai-prediction')}
-            >
-              <div className="nav-module-icon nav-module-icon-success">
-                <RobotOutlined />
-              </div>
-              <Title level={4}>AI dự đoán thiên tai</Title>
-              <Paragraph type="secondary">
-                Truy cập mô-đun AI để xem dự đoán nguy cơ thiên tai theo khu vực.
-              </Paragraph>
-            </Card>
-          </Col>
-        </Row>
       </section>
 
       {/* Statistics Section */}
@@ -321,257 +211,99 @@ const HomePage = () => {
         </Row>
       </section>
 
-      {/* Main Content Grid */}
-      <section className="main-content-section">
-        <Row gutter={[24, 24]}>
-          {/* Map Section */}
-          <Col xs={24} lg={16}>
-            <Card className="content-card map-card">
-              <div className="card-header">
-                <Title level={4}>
-                  <EnvironmentOutlined /> Bản Đồ Khu Vực Giám Sát
-                </Title>
-                <Button type="link" onClick={() => navigate('/monitoring')}>
-                  Xem chi tiết <ArrowRightOutlined />
-                </Button>
-              </div>
-              {monitoringAreas.length > 0 ? (
-                <MonitoringMap areas={monitoringAreas} height="450px" />
-              ) : (
-                <Empty description="Chưa có dữ liệu khu vực giám sát" />
-              )}
-            </Card>
-          </Col>
+          {/* Features Section */}
+          <section className="features-section">
+            <div className="section-header">
+              <Title level={2} className="section-title">Tính Năng Chính</Title>
+              <Text className="section-subtitle">Hệ thống được trang bị đầy đủ công cụ giám sát và phân tích</Text>
+            </div>
+            <Row gutter={[24, 24]}>
+              <Col xs={24} md={12}>
+                <Card className="feature-card">
+                  <div className="feature-icon feature-icon-primary">
+                    <EnvironmentOutlined />
+                  </div>
+                  <Title level={4}>Giám Sát Khu Vực</Title>
+                  <Paragraph>
+                    Theo dõi và giám sát các khu vực có nguy cơ sụt lún cao 
+                    với dữ liệu cập nhật theo thời gian thực từ hệ thống GPS và cảm biến.
+                  </Paragraph>
+                </Card>
+              </Col>
+              <Col xs={24} md={12}>
+                <Card className="feature-card">
+                  <div className="feature-icon feature-icon-warning">
+                    <WarningOutlined />
+                  </div>
+                  <Title level={4}>Cảnh Báo Tự Động</Title>
+                  <Paragraph>
+                    Hệ thống tự động phát hiện và cảnh báo khi phát hiện 
+                    dấu hiệu sụt lún bất thường vượt ngưỡng cho phép với độ chính xác cao.
+                  </Paragraph>
+                </Card>
+              </Col>
+              <Col xs={24} md={12}>
+                <Card className="feature-card">
+                  <div className="feature-icon feature-icon-success">
+                    <BarChartOutlined />
+                  </div>
+                  <Title level={4}>Báo Cáo & Phân Tích</Title>
+                  <Paragraph>
+                    Tạo báo cáo chi tiết và phân tích xu hướng sụt lún 
+                    theo thời gian với biểu đồ trực quan và dự báo chính xác.
+                  </Paragraph>
+                </Card>
+              </Col>
+            </Row>
+          </section>
 
-          {/* Alerts Section */}
-          <Col xs={24} lg={8}>
-            <Card className="content-card alerts-card">
-              <div className="card-header">
-                <Title level={4}>
-                  <BellOutlined /> Cảnh Báo Mới Nhất
-                </Title>
-                <Button type="link" onClick={() => navigate('/alerts')}>
-                  Xem tất cả <ArrowRightOutlined />
-                </Button>
-              </div>
-              {recentAlerts.length > 0 ? (
-                <List
-                  dataSource={recentAlerts}
-                  renderItem={(alert) => (
-                    <List.Item className="alert-item">
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar
-                            style={{
-                              backgroundColor: getSeverityColor(alert.severity),
-                            }}
-                            icon={getSeverityIcon(alert.severity)}
-                          />
-                        }
-                        title={
-                          <div>
-                            <Text strong>{alert.title}</Text>
-                            <Tag
-                              color={getSeverityColor(alert.severity)}
-                              style={{ marginLeft: 8 }}
-                            >
-                              {alert.severity}
-                            </Tag>
-                          </div>
-                        }
-                        description={
-                          <div>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                              {alert.areaName}
-                            </Text>
-                            <br />
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                              {dayjs(alert.alertTime).fromNow()}
-                            </Text>
-                          </div>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <Empty description="Không có cảnh báo mới" />
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </section>
+        </Col>
 
-      {/* Charts and Analysis Section */}
-      <section className="charts-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">
-            <BarChartOutlined /> Phân Tích & Xu Hướng
-          </Title>
-        </div>
-        <Row gutter={[24, 24]}>
-          <Col xs={24} lg={16}>
-            <SubsidenceChart data={trendData} title="Xu hướng sụt lún 30 ngày qua" />
-          </Col>
-          <Col xs={24} lg={8}>
-            <Card className="content-card">
-              <Title level={4}>
-                <SafetyOutlined /> Trạng Thái Thiết Bị
+        {/* News Section - Right Sidebar */}
+        <Col xs={24} lg={8} className="news-sidebar-col">
+          <Card className="news-card news-sidebar">
+            <div className="section-header">
+              <Title level={2} className="section-title">
+                <FileTextOutlined /> Tin Tức Nổi Bật
               </Title>
-              {deviceStatus && (
-                <div className="device-status">
-                  <div className="status-item">
-                    <Text>Hoạt động</Text>
-                    <Progress
-                      percent={(deviceStatus.active / (deviceStatus.active + deviceStatus.inactive + deviceStatus.maintenance + deviceStatus.faulty)) * 100}
-                      strokeColor="#10b981"
-                      format={() => `${deviceStatus.active} thiết bị`}
-                    />
-                  </div>
-                  <div className="status-item">
-                    <Text>Không hoạt động</Text>
-                    <Progress
-                      percent={(deviceStatus.inactive / (deviceStatus.active + deviceStatus.inactive + deviceStatus.maintenance + deviceStatus.faulty)) * 100}
-                      strokeColor="#6b7280"
-                      format={() => `${deviceStatus.inactive} thiết bị`}
-                    />
-                  </div>
-                  <div className="status-item">
-                    <Text>Bảo trì</Text>
-                    <Progress
-                      percent={(deviceStatus.maintenance / (deviceStatus.active + deviceStatus.inactive + deviceStatus.maintenance + deviceStatus.faulty)) * 100}
-                      strokeColor="#f59e0b"
-                      format={() => `${deviceStatus.maintenance} thiết bị`}
-                    />
-                  </div>
-                  <div className="status-item">
-                    <Text>Lỗi</Text>
-                    <Progress
-                      percent={(deviceStatus.faulty / (deviceStatus.active + deviceStatus.inactive + deviceStatus.maintenance + deviceStatus.faulty)) * 100}
-                      strokeColor="#ef4444"
-                      format={() => `${deviceStatus.faulty} thiết bị`}
-                    />
-                  </div>
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </section>
-
-      {/* District Statistics Section */}
-      <section className="district-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">
-            <GlobalOutlined /> Thống Kê Theo Quận/Huyện
-          </Title>
-        </div>
-        <Row gutter={[16, 16]}>
-          {districtStats.map((district, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={index}>
-              <Card className="district-card">
-                <div className="district-header">
-                  <Title level={5}>{district.districtName}</Title>
-                  <Tag color={getRiskLevelColor(district.riskLevel)}>
-                    {district.riskLevel}
-                  </Tag>
-                </div>
-                <div className="district-stats">
-                  <div className="district-stat-item">
-                    <Text type="secondary">Khu vực:</Text>
-                    <Text strong>{district.areas}</Text>
-                  </div>
-                  <div className="district-stat-item">
-                    <Text type="secondary">Cảnh báo:</Text>
-                    <Text strong style={{ color: district.alerts > 0 ? '#f59e0b' : '#10b981' }}>
-                      {district.alerts}
+            </div>
+            <div className="news-list">
+              {news.map((item) => (
+                <Card
+                  key={item.id}
+                  className="news-item"
+                  hoverable
+                  onClick={() => navigate(`/news/${item.id}`)}
+                  style={{ marginBottom: 16 }}
+                >
+                  <div className="news-item-header">
+                    <Text type="secondary" className="news-category">
+                      {item.category}
+                    </Text>
+                    <Text type="secondary" className="news-date">
+                      <CalendarOutlined /> {item.date}
                     </Text>
                   </div>
-                  <div className="district-stat-item">
-                    <Text type="secondary">Tốc độ TB:</Text>
-                    <Text strong>{district.avgRate} mm/year</Text>
+                  <Title level={5} className="news-title">
+                    {item.title}
+                  </Title>
+                  <Paragraph className="news-summary" ellipsis={{ rows: 2 }}>
+                    {item.summary}
+                  </Paragraph>
+                  <div className="news-footer">
+                    <Text type="secondary" className="news-views">
+                      <EyeOutlined /> {item.views} lượt xem
+                    </Text>
+                    <Button type="link" size="small">
+                      Đọc thêm <ArrowRightOutlined />
+                    </Button>
                   </div>
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </section>
-
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="section-header">
-          <Title level={2} className="section-title">Tính Năng Chính</Title>
-          <Text className="section-subtitle">Hệ thống được trang bị đầy đủ công cụ giám sát và phân tích</Text>
-        </div>
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12} lg={8}>
-            <Card className="feature-card">
-              <div className="feature-icon feature-icon-primary">
-                <EnvironmentOutlined />
-              </div>
-              <Title level={4}>Giám Sát Khu Vực</Title>
-              <Paragraph>
-                Theo dõi và giám sát các khu vực có nguy cơ sụt lún cao 
-                với dữ liệu cập nhật theo thời gian thực từ hệ thống GPS và cảm biến.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <Card className="feature-card">
-              <div className="feature-icon feature-icon-warning">
-                <WarningOutlined />
-              </div>
-              <Title level={4}>Cảnh Báo Tự Động</Title>
-              <Paragraph>
-                Hệ thống tự động phát hiện và cảnh báo khi phát hiện 
-                dấu hiệu sụt lún bất thường vượt ngưỡng cho phép với độ chính xác cao.
-              </Paragraph>
-            </Card>
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <Card className="feature-card">
-              <div className="feature-icon feature-icon-success">
-                <BarChartOutlined />
-              </div>
-              <Title level={4}>Báo Cáo & Phân Tích</Title>
-              <Paragraph>
-                Tạo báo cáo chi tiết và phân tích xu hướng sụt lún 
-                theo thời gian với biểu đồ trực quan và dự báo chính xác.
-              </Paragraph>
-            </Card>
-          </Col>
-        </Row>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <Card className="cta-card">
-          <div className="cta-content">
-            <Title level={2}>Bắt Đầu Sử Dụng Ngay</Title>
-            <Paragraph>
-              Đăng ký tài khoản để truy cập đầy đủ các tính năng của hệ thống 
-              và nhận thông báo cảnh báo sớm về tình trạng sụt lún đất.
-            </Paragraph>
-            <Space size="large">
-              <Button 
-                type="primary" 
-                size="large"
-                icon={<ArrowRightOutlined />}
-                onClick={() => navigate('/register')}
-              >
-                Đăng ký ngay
-              </Button>
-              <Button 
-                size="large"
-                onClick={() => navigate('/login')}
-              >
-                Đã có tài khoản? Đăng nhập
-              </Button>
-            </Space>
-          </div>
-        </Card>
-      </section>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };
