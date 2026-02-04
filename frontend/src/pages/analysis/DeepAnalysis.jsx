@@ -1,13 +1,29 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Card, Spin, message } from 'antd';
+import { Card, Spin, App } from 'antd';
 import DeepAnalysisMap from '../../components/maps/DeepAnalysisMap';
 import { getMonitoringAreas } from '../../api/monitoring/areas';
 import SendReportButton from '../../components/SendReportButton';
 import './DeepAnalysis.css';
 
 const DeepAnalysis = () => {
+  const { message } = App.useApp();
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const deepAnalysisReportData = useMemo(() => {
+    if (!areas || areas.length === 0) return '';
+    const lines = [
+      'Báo cáo từ trang Phân tích chuyên sâu',
+      `Tổng số khu vực giám sát: ${areas.length}`,
+      '',
+      ...areas.slice(0, 50).map((a) => {
+        const name = a.areaName || a.districtName || a.name || '—';
+        const risk = a.riskLevel != null ? a.riskLevel : '';
+        return risk ? `${name} (${risk})` : name;
+      }),
+    ];
+    return lines.join('\n');
+  }, [areas]);
 
   useEffect(() => {
     const fetchAreas = async () => {

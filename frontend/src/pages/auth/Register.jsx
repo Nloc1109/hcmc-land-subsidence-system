@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Select } from 'antd';
+import { Form, Input, Button, Card, Typography, App, Select } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -14,6 +14,7 @@ import './Auth.css';
 const { Title, Text } = Typography;
 
 const RegisterPage = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(false);
@@ -25,7 +26,8 @@ const RegisterPage = () => {
       try {
         setRoleLoading(true);
         const data = await authApi.getRoles();
-        setRoles(data.roles || []);
+        const list = (data.roles || []).filter((r) => (r.RoleName || r.roleName) !== 'Manager');
+        setRoles(list);
       } catch (error) {
         // Không chặn đăng ký nếu lỗi, chỉ báo nhẹ
         console.error('Load roles error:', error);

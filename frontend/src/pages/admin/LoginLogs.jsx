@@ -139,7 +139,7 @@ const LoginLogs = () => {
       dataIndex: 'RoleName',
       key: 'RoleName',
       render: (role) => (
-        <Tag color={role === 'Admin' ? 'red' : role === 'Manager' ? 'blue' : 'default'}>
+        <Tag color={role === 'Admin' ? 'red' : 'default'}>
           {role}
         </Tag>
       ),

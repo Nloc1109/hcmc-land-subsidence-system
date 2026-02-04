@@ -14,17 +14,32 @@ export const authenticate = async (req, res, next) => {
     const token = authHeader.substring(7);
     const payload = jwt.verify(token, JWT_SECRET);
 
-    // Lấy thông tin user từ database
-    const pool = await getPool();
-    const result = await pool
-      .request()
-      .input('UserId', payload.sub)
-      .query(
-        `SELECT u.*, r.RoleName
-         FROM Users u
-         LEFT JOIN Roles r ON r.RoleId = u.RoleId
-         WHERE u.UserId = @UserId AND u.IsActive = 1`
-      );
+    const queryUser = async () => {
+      const pool = await getPool();
+      return pool
+        .request()
+        .input('UserId', payload.sub)
+        .query(
+          `SELECT u.*, r.RoleName
+           FROM Users u
+           LEFT JOIN Roles r ON r.RoleId = u.RoleId
+           WHERE u.UserId = @UserId AND u.IsActive = 1`
+        );
+    };
+
+    let result;
+    try {
+      result = await queryUser();
+    } catch (firstErr) {
+      const msg = String(firstErr?.message || '');
+      const isConnection = /ECONNREFUSED|ETIMEDOUT|ConnectionError|Failed to connect/i.test(msg);
+      if (isConnection) {
+        await new Promise((r) => setTimeout(r, 400));
+        result = await queryUser();
+      } else {
+        throw firstErr;
+      }
+    }
 
     if (result.recordset.length === 0) {
       return res.status(401).json({ message: 'Token không hợp lệ hoặc người dùng đã bị vô hiệu' });
@@ -46,6 +61,10 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: 'Token đã hết hạn' });
     }
     console.error('Auth middleware error:', error);
+    const isDbError = /ECONNREFUSED|ETIMEDOUT|ConnectionError|Failed to connect|Invalid object name/i.test(String(error.message || ''));
+    if (isDbError) {
+      return res.status(503).json({ message: 'Tạm thời không kết nối được. Vui lòng thử lại sau.' });
+    }
     return res.status(500).json({ message: 'Lỗi xác thực' });
   }
 };

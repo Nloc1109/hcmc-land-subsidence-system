@@ -13,6 +13,7 @@ import devicesRouter from './routes/devices.js';
 import usersRouter from './routes/users.js';
 import auditLogsRouter from './routes/audit-logs.js';
 import notificationsRouter from './routes/notifications.js';
+import systemNewsRouter from './routes/system-news.js';
 import monitoringAreasRouter from './routes/monitoring-areas.js';
 import areasRouter from './routes/areas.js';
 
@@ -69,6 +70,9 @@ app.use('/api/v1/audit-logs', auditLogsRouter);
 
 // Notifications (hộp thư) - mọi user đã đăng nhập
 app.use('/api/v1/notifications', notificationsRouter);
+
+// Tin hệ thống (trang Tin tức - tab Tin hệ thống)
+app.use('/api/v1/system-news', systemNewsRouter);
 
 // Monitoring areas routes
 app.use('/api/v1/monitoring-areas', monitoringAreasRouter);
@@ -309,8 +313,16 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có đúng cấu trúc sau (tiếng Vi�
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   // eslint-disable-next-line no-console
   console.log(`Backend listening on http://localhost:${PORT}`);
+  // Làm ấm pool DB ngay khi khởi động để lần đầu vào hộp thư load được thông báo
+  try {
+    const pool = await getPool();
+    await pool.request().query('SELECT 1 AS ok');
+    console.log('DB pool ready');
+  } catch (err) {
+    console.warn('DB pool warm-up failed (first request may retry):', err?.message || err);
+  }
 });
 

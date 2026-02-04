@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Typography, Card, Row, Col, Tag, List, Progress, Divider, Statistic, Button, Spin, Select, Table, message, Modal } from 'antd';
+import { Typography, Card, Row, Col, Tag, List, Progress, Divider, Statistic, Button, Spin, Select, Table, App, Modal } from 'antd';
 import { BarChartOutlined, EnvironmentOutlined, AlertOutlined, WarningOutlined, RiseOutlined, ArrowLeftOutlined, CloudOutlined, EyeOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -460,6 +460,7 @@ const VIEW_MAIN = 'main';
 const VIEW_DISTRICT_STATS = 'district-stats';
 
 const ReportsPage = () => {
+  const { message } = App.useApp();
   const [view, setView] = useState(VIEW_MAIN);
   const [districtData, setDistrictData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -656,7 +657,7 @@ const ReportsPage = () => {
 
         {loading ? (
           <div className="reports-sub-view-loading">
-            <Spin size="large" tip="Đang tải dữ liệu thống kê..." />
+            <Spin size="large" tip="Đang tải dữ liệu thống kê..."><div style={{ minHeight: 120 }} /></Spin>
           </div>
         ) : (
           <>
@@ -1001,11 +1002,11 @@ const ReportsPage = () => {
         onCancel={() => { setDetailModalOpen(false); setDetailDistrict(null); setDetailWardData([]); }}
         footer={null}
         width={640}
-        destroyOnClose
+        destroyOnHidden
       >
         {detailLoading ? (
           <div style={{ minHeight: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Spin tip="Đang tải dữ liệu theo phường/xã..." />
+            <Spin tip="Đang tải dữ liệu theo phường/xã..."><div style={{ minHeight: 120 }} /></Spin>
           </div>
         ) : detailWardData.length > 0 ? (
           <div className="reports-detail-chart-wrap">

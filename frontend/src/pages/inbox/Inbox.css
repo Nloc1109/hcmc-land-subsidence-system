@@ -2,7 +2,10 @@
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
-  padding-bottom: 48px;
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
 }
 
 .inbox-header {
@@ -20,6 +23,39 @@
 
 .inbox-card {
   border-radius: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.inbox-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inbox-list-area {
+  flex: 1;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.inbox-list-area .ant-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.inbox-pagination-wrap {
+  flex-shrink: 0;
+  padding: 16px 0 8px;
+  display: flex;
+  justify-content: center;
 }
 
 .inbox-toolbar {
@@ -27,7 +63,45 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inbox-toolbar-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Nhóm nút Thư đến/Thư đã gửi + Tất cả/Chưa đọc: cùng hàng, căn giữa, khoảng cách đều */
+.inbox-toolbar-segments {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inbox-toolbar-segments .ant-segmented {
+  display: inline-flex;
+}
+
+.inbox-toolbar-segments .ant-segmented-item {
+  min-width: 72px;
+  text-align: center;
+  justify-content: center;
+}
+
+.inbox-toolbar-actions {
+  flex-shrink: 0;
+}
+
+.inbox-item-edit.inbox-item-selected {
+  background: rgba(22, 119, 255, 0.08);
+}
+
+.inbox-item-edit .ant-list-item-extra {
+  margin-left: 12px;
 }
 
 .inbox-loading {
@@ -87,6 +161,39 @@
   margin-bottom: 4px;
 }
 
+.inbox-item-title-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.inbox-item-title-text {
+  flex: 1;
+  min-width: 0;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.inbox-item-desc {
+  margin-top: 2px;
+}
+
+.inbox-item-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 4px;
+}
+
+.inbox-item-meta {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.inbox-item-time {
+  color: var(--text-secondary, #8c8c8c);
+}
+
 .inbox-item .ant-list-item-meta-description {
   margin-bottom: 0;
 }
@@ -109,6 +216,23 @@
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.inbox-detail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.inbox-detail-time {
+  font-size: 13px;
+}
+
+.inbox-detail-source {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
 }
 
 .inbox-detail-message {

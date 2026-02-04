@@ -119,7 +119,7 @@ const HomePage = () => {
   if (loading) {
     return (
       <div className="home-page loading-container">
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <Spin size="large" tip="Đang tải dữ liệu..."><div style={{ minHeight: 120 }} /></Spin>
       </div>
     );
   }

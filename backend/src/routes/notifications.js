@@ -14,10 +14,29 @@ router.use(authenticate);
  * Fallback: nếu chưa chạy migration SenderId thì trả về danh sách không có sender.
  */
 router.get('/', async (req, res) => {
+  const safeList = () => {
+    if (!res.headersSent) {
+      res.status(200).json({
+        items: [],
+        total: 0,
+        page: parseInt(req.query?.page) || 1,
+        limit: parseInt(req.query?.limit) || 20,
+      });
+    }
+  };
   try {
-    const userId = req.user.userId;
+    const userId = req.user?.userId;
+    if (userId == null) {
+      return safeList();
+    }
     const { page = 1, limit = 20, unreadOnly } = req.query;
-    const pool = await getPool();
+    let pool;
+    try {
+      pool = await getPool();
+    } catch (poolErr) {
+      console.error('GET /notifications getPool failed:', poolErr?.message || poolErr);
+      return safeList();
+    }
     const offset = (Math.max(1, parseInt(page)) - 1) * Math.min(50, parseInt(limit) || 20);
     const limitVal = Math.min(50, parseInt(limit) || 20);
     let whereClause = 'n.UserId = @UserId';
@@ -103,64 +122,91 @@ router.get('/', async (req, res) => {
       request.input('Limit', limitVal);
       result = await request.query(listQueryWithAttachment);
     } catch (queryErr) {
-      const msg = (queryErr && queryErr.message) || '';
+      const msg = String((queryErr && queryErr.message) || '');
       const req2 = pool.request();
       req2.input('UserId', userId);
       req2.input('Offset', offset);
       req2.input('Limit', limitVal);
-      if (msg.includes('SenderId') || msg.includes('Invalid column')) {
+      const isColumnOrObjectError = /SenderId|AttachmentPath|AttachmentFileName|Invalid column|invalid column name|Invalid object name/i.test(msg);
+      if (isColumnOrObjectError) {
         try {
-          result = await req2.query(listQueryWithoutAttachment);
+          result = await req2.query(listQueryNoSender);
         } catch (e2) {
-          if ((e2.message || '').includes('SenderId') || (e2.message || '').includes('Invalid column')) {
-            result = await req2.query(listQueryNoSender);
+          const msg2 = String((e2 && e2.message) || '');
+          if (/Invalid object name|Invalid column|invalid column name/i.test(msg2)) {
+            result = { recordset: [] };
           } else throw e2;
         }
-      } else if (msg.includes('AttachmentPath') || msg.includes('AttachmentFileName')) {
-        result = await req2.query(listQueryWithoutAttachment);
       } else {
-        throw queryErr;
+        try {
+          result = await req2.query(listQueryNoSender);
+        } catch (eFallback) {
+          const msgF = String((eFallback && eFallback.message) || '');
+          if (/Invalid object name|Invalid column/i.test(msgF)) {
+            result = { recordset: [] };
+          } else throw queryErr;
+        }
       }
     }
 
-    const countReq = pool.request();
-    countReq.input('UserId', userId);
-    const countQuery =
-      unreadOnly === 'true'
-        ? 'SELECT COUNT(*) AS Total FROM Notifications n WHERE n.UserId = @UserId AND n.IsRead = 0'
-        : 'SELECT COUNT(*) AS Total FROM Notifications n WHERE n.UserId = @UserId';
-    const countResult = await countReq.query(countQuery);
+    let total = 0;
+    try {
+      const countReq = pool.request();
+      countReq.input('UserId', userId);
+      const countQuery =
+        unreadOnly === 'true'
+          ? 'SELECT COUNT(*) AS Total FROM Notifications n WHERE n.UserId = @UserId AND n.IsRead = 0'
+          : 'SELECT COUNT(*) AS Total FROM Notifications n WHERE n.UserId = @UserId';
+      const countResult = await countReq.query(countQuery);
+      total = countResult.recordset[0].Total;
+    } catch (countErr) {
+      const msg = String((countErr && countErr.message) || '');
+      if (/Invalid object name|Invalid column/i.test(msg)) total = 0;
+      else throw countErr;
+    }
     res.json({
-      items: result.recordset,
-      total: countResult.recordset[0].Total,
+      items: result.recordset || [],
+      total,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
     });
   } catch (err) {
     console.error('Error GET /notifications:', err);
-    res.status(500).json({ message: 'Lỗi khi lấy thông báo' });
+    safeList();
   }
 });
 
 /**
  * GET /api/v1/notifications/unread-count
  * Số thông báo chưa đọc (cho badge trên nav).
+ * Luôn trả 200 + { unreadCount } (0 khi lỗi) để UI không vỡ.
  */
 router.get('/unread-count', async (req, res) => {
+  const sendSafe = () => {
+    try {
+      if (!res.headersSent) res.status(200).json({ unreadCount: 0 });
+    } catch (e) {
+      console.error('sendSafe unread-count', e);
+    }
+  };
   try {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('UserId', req.user.userId)
+      .input('UserId', req.user?.userId)
       .query(`
         SELECT COUNT(*) AS UnreadCount
         FROM Notifications
         WHERE UserId = @UserId AND IsRead = 0
       `);
-    res.json({ unreadCount: result.recordset[0].UnreadCount });
+    if (!res.headersSent && result?.recordset?.[0]) {
+      res.status(200).json({ unreadCount: result.recordset[0].UnreadCount });
+    } else if (!res.headersSent) {
+      sendSafe();
+    }
   } catch (err) {
     console.error('Error GET /notifications/unread-count:', err);
-    res.status(500).json({ message: 'Lỗi khi đếm thông báo' });
+    sendSafe();
   }
 });
 
@@ -412,57 +458,23 @@ router.get('/sent', async (req, res) => {
       `);
     } catch (queryErr) {
       const msg = (queryErr && queryErr.message) || '';
-      if (msg.includes('SenderId') || msg.includes('Invalid column')) {
+      if (/SenderId|AttachmentPath|AttachmentFileName|Invalid column|Invalid object name/i.test(msg)) {
         return res.json({ items: [], total: 0, page: 1, limit: limitVal });
       }
-      if (msg.includes('AttachmentPath') || msg.includes('AttachmentFileName')) {
-        const req2 = pool.request();
-        req2.input('SenderId', senderId);
-        req2.input('Offset', offset);
-        req2.input('Limit', limitVal);
-        result = await req2.query(`
-          SELECT
-            n.NotificationId,
-            n.UserId AS RecipientUserId,
-            n.Title,
-            n.Message,
-            n.NotificationType,
-            n.IsRead,
-            n.CreatedAt,
-            n.SenderId,
-            NULL AS AttachmentPath,
-            NULL AS AttachmentFileName,
-            NULL AS AttachmentMimeType,
-            rec.FullName AS RecipientFullName,
-            rec.Username AS RecipientUsername,
-            r.RoleName AS RecipientRole
-          FROM Notifications n
-          INNER JOIN Users rec ON n.UserId = rec.UserId
-          LEFT JOIN Roles r ON rec.RoleId = r.RoleId
-          WHERE n.SenderId = @SenderId
-          ORDER BY n.CreatedAt DESC
-          OFFSET @Offset ROWS
-          FETCH NEXT @Limit ROWS ONLY
-        `);
-        const countReq = pool.request();
-        countReq.input('SenderId', senderId);
-        countResult = await countReq.query(`
-          SELECT COUNT(*) AS Total FROM Notifications n WHERE n.SenderId = @SenderId
-        `);
-      } else {
-        throw queryErr;
-      }
+      throw queryErr;
     }
 
     res.json({
-      items: result.recordset,
-      total: countResult.recordset[0].Total,
+      items: result.recordset || [],
+      total: (countResult && countResult.recordset && countResult.recordset[0]) ? countResult.recordset[0].Total : 0,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
     });
   } catch (err) {
     console.error('Error GET /notifications/sent:', err);
-    res.status(500).json({ message: 'Lỗi khi lấy thư đã gửi' });
+    if (!res.headersSent) {
+      res.status(200).json({ items: [], total: 0, page: 1, limit: parseInt(req.query.limit) || 20 });
+    }
   }
 });
 
@@ -493,44 +505,80 @@ router.get('/recipients', async (req, res) => {
 /**
  * GET /api/v1/notifications/:id/attachment
  * Xem/tải file đính kèm (chỉ người nhận). Trả về file với Content-Disposition: inline để xem trên trình duyệt.
+ * Nếu bảng chưa có cột đính kèm hoặc file không tồn tại → 404. Lỗi kết nối DB → 503 (để client retry).
  */
 router.get('/:id/attachment', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: 'ID không hợp lệ' });
+  }
+  const send404 = (msg = 'Không tìm thấy thông báo hoặc file đính kèm') => {
+    if (!res.headersSent) res.status(404).json({ message: msg });
+  };
+  const send503 = () => {
+    if (!res.headersSent) res.status(503).json({ message: 'Tạm thời không tải được file. Vui lòng thử lại.' });
+  };
+  const runQuery = async (pool) =>
+    pool
+      .request()
+      .input('NotificationId', id)
+      .input('UserId', req.user?.userId)
+      .query(`
+        SELECT AttachmentPath, AttachmentFileName, AttachmentMimeType
+        FROM Notifications
+        WHERE NotificationId = @NotificationId AND (UserId = @UserId OR SenderId = @UserId)
+      `);
   try {
-    const id = parseInt(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: 'ID không hợp lệ' });
+    let pool;
+    try {
+      pool = await getPool();
+    } catch (poolErr) {
+      const msg = String(poolErr?.message || '');
+      if (/ECONNREFUSED|ETIMEDOUT|ConnectionError|Failed to connect/i.test(msg)) {
+        await new Promise((r) => setTimeout(r, 400));
+        pool = await getPool();
+      } else {
+        throw poolErr;
+      }
     }
-    const pool = await getPool();
     let row;
     try {
-      row = await pool
-        .request()
-        .input('NotificationId', id)
-        .input('UserId', req.user.userId)
-        .query(`
-          SELECT AttachmentPath, AttachmentFileName, AttachmentMimeType
-          FROM Notifications
-          WHERE NotificationId = @NotificationId AND (UserId = @UserId OR SenderId = @UserId)
-        `);
+      row = await runQuery(pool);
     } catch (e) {
-      if ((e.message || '').includes('SenderId') || (e.message || '').includes('Invalid column')) {
-        row = await pool
-          .request()
-          .input('NotificationId', id)
-          .input('UserId', req.user.userId)
-          .query(`
-            SELECT AttachmentPath, AttachmentFileName, AttachmentMimeType
-            FROM Notifications
-            WHERE NotificationId = @NotificationId AND UserId = @UserId
-          `);
-      } else throw e;
+      const em = String((e && e.message) || '');
+      if (/ECONNREFUSED|ETIMEDOUT|ConnectionError|Failed to connect/i.test(em)) {
+        await new Promise((r) => setTimeout(r, 400));
+        try {
+          row = await runQuery(pool);
+        } catch (retryErr) {
+          console.error('Error GET /notifications/:id/attachment (after retry):', retryErr);
+          return send503();
+        }
+      } else if (/SenderId|AttachmentPath|Invalid column|invalid column name|Invalid object name/i.test(em)) {
+        try {
+          row = await pool
+            .request()
+            .input('NotificationId', id)
+            .input('UserId', req.user?.userId)
+            .query(`
+              SELECT 1 AS HasRow FROM Notifications
+              WHERE NotificationId = @NotificationId AND UserId = @UserId
+            `);
+          if (row && row.recordset && row.recordset.length > 0) {
+            return send404('Chưa hỗ trợ file đính kèm. Chạy migration 002-add-notifications-attachment.sql.');
+          }
+        } catch (_) {}
+        return send404();
+      } else {
+        throw e;
+      }
     }
-    if (!row.recordset || row.recordset.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy thông báo hoặc file đính kèm' });
+    if (!row || !row.recordset || row.recordset.length === 0) {
+      return send404();
     }
     const { AttachmentPath, AttachmentFileName, AttachmentMimeType } = row.recordset[0];
     if (!AttachmentPath || !fs.existsSync(AttachmentPath)) {
-      return res.status(404).json({ message: 'File đính kèm không tồn tại' });
+      return send404('File đính kèm không tồn tại');
     }
     const mime = AttachmentMimeType || 'application/octet-stream';
     res.setHeader('Content-Type', mime);
@@ -538,7 +586,44 @@ router.get('/:id/attachment', async (req, res) => {
     fs.createReadStream(AttachmentPath).pipe(res);
   } catch (err) {
     console.error('Error GET /notifications/:id/attachment:', err);
-    res.status(500).json({ message: 'Lỗi khi tải file' });
+    const isDb = /ECONNREFUSED|ETIMEDOUT|ConnectionError|Failed to connect|Invalid object name/i.test(String(err?.message || ''));
+    if (isDb && !res.headersSent) {
+      return send503();
+    }
+    if (!res.headersSent) send404('Không tải được file');
+  }
+});
+
+/**
+ * DELETE /api/v1/notifications/:id
+ * Xóa một thông báo: thư đến (UserId = me) hoặc thư đã gửi (SenderId = me, xóa bản ghi gửi tới một người nhận).
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ message: 'ID không hợp lệ' });
+    }
+    const userId = req.user?.userId;
+    if (userId == null) {
+      return res.status(401).json({ message: 'Chưa đăng nhập' });
+    }
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input('NotificationId', id)
+      .input('UserId', userId)
+      .query(`
+        DELETE FROM Notifications
+        WHERE NotificationId = @NotificationId AND (UserId = @UserId OR SenderId = @UserId)
+      `);
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy thông báo hoặc không có quyền xóa' });
+    }
+    res.json({ message: 'Đã xóa thông báo' });
+  } catch (err) {
+    console.error('Error DELETE /notifications/:id:', err);
+    res.status(500).json({ message: 'Lỗi khi xóa thông báo' });
   }
 });
 

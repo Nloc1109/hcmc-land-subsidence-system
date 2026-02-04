@@ -12,7 +12,7 @@ import {
   Empty,
   Button,
   Segmented,
-  message,
+  App,
   Alert,
   Popover,
 } from 'antd';
@@ -151,6 +151,7 @@ function getPointsAroundCenter(lat, lng) {
 }
 
 const DiagnosisPage = () => {
+  const { message } = App.useApp();
   const [mapAreas, setMapAreas] = useState([]);
   const [mapLoading, setMapLoading] = useState(true);
   const [topRiskAreas, setTopRiskAreas] = useState([]);
@@ -505,7 +506,7 @@ ${alertsHtml}
       {/* Bản đồ (nửa trái) + Chênh lệch độ cao (nửa phải) — cùng kích thước */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }} className="diagnosis-map-elevation-row">
         <Col xs={24} md={12}>
-          <Card className="diagnosis-card diagnosis-map-card diagnosis-equal-height" bordered={false}>
+          <Card className="diagnosis-card diagnosis-map-card diagnosis-equal-height" variant="borderless">
             <div className="diagnosis-card-header">
               <EnvironmentOutlined className="diagnosis-card-icon" />
               <span>Bản đồ khu vực giám sát</span>
@@ -513,13 +514,13 @@ ${alertsHtml}
             <div className="diagnosis-map-wrapper diagnosis-map-wrapper--equal">
               {mapLoading ? (
                 <div className="diagnosis-map-loading">
-                  <Spin size="large" tip="Đang tải bản đồ..." />
+                  <Spin size="large" tip="Đang tải bản đồ..."><div style={{ minHeight: 120 }} /></Spin>
                 </div>
               ) : (
                 <Suspense
                   fallback={
                     <div className="diagnosis-map-loading">
-                      <Spin size="large" tip="Đang tải bản đồ..." />
+                      <Spin size="large" tip="Đang tải bản đồ..."><div style={{ minHeight: 120 }} /></Spin>
                     </div>
                   }
                 >
@@ -539,7 +540,7 @@ ${alertsHtml}
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card className="diagnosis-card diagnosis-elevation-card diagnosis-equal-height" bordered={false}>
+          <Card className="diagnosis-card diagnosis-elevation-card diagnosis-equal-height" variant="borderless">
             <div className="diagnosis-card-header">
               <RiseOutlined className="diagnosis-card-icon" />
               <span>Chênh lệch độ cao các khu vực trong địa điểm</span>
@@ -557,7 +558,7 @@ ${alertsHtml}
               <>
                 {elevationLoading && !elevationGridData ? (
                   <div className="diagnosis-map-loading" style={{ minHeight: 200 }}>
-                    <Spin size="large" tip="Đang khảo sát độ cao trong bán kính 50m..." />
+                    <Spin size="large" tip="Đang khảo sát độ cao trong bán kính 50m..."><div style={{ minHeight: 120 }} /></Spin>
                   </div>
                 ) : elevationError && !elevationGridData ? (
                   <Alert type="warning" showIcon message="Không lấy được độ cao" description={elevationError} />
@@ -718,7 +719,7 @@ ${alertsHtml}
       {/* Chọn khu vực chẩn đoán + Kết quả chẩn đoán — ngay dưới bản đồ & độ cao */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={14}>
-          <Card className="diagnosis-card" bordered={false}>
+          <Card className="diagnosis-card" variant="borderless">
             <div className="diagnosis-card-header">
               <AimOutlined className="diagnosis-card-icon" />
               <span>Chọn khu vực cần chẩn đoán</span>
@@ -791,7 +792,7 @@ ${alertsHtml}
         <Col xs={24} lg={10}>
           {selectedArea ? (
             <>
-              <Card className="diagnosis-card diagnosis-detail-card" bordered={false}>
+              <Card className="diagnosis-card diagnosis-detail-card" variant="borderless">
                 <div className="diagnosis-card-header diagnosis-card-header--actions">
                   <span className="diagnosis-card-header-left">
                     <BarChartOutlined className="diagnosis-card-icon" />
@@ -853,7 +854,7 @@ ${alertsHtml}
                   </div>
                 </div>
               </Card>
-              <Card className="diagnosis-card" bordered={false}>
+              <Card className="diagnosis-card" variant="borderless">
                 <div className="diagnosis-card-header">
                   <BulbOutlined className="diagnosis-card-icon" />
                   <span>Khuyến nghị</span>
@@ -867,7 +868,7 @@ ${alertsHtml}
                 </ul>
               </Card>
               {alertsForSelected.length > 0 && (
-                <Card className="diagnosis-card" bordered={false}>
+                <Card className="diagnosis-card" variant="borderless">
                   <div className="diagnosis-card-header">
                     <BellOutlined className="diagnosis-card-icon" />
                     <span>Cảnh báo liên quan ({alertsForSelected.length})</span>
@@ -901,7 +902,7 @@ ${alertsHtml}
               </Button>
             </>
           ) : (
-            <Card className="diagnosis-card diagnosis-placeholder-card" bordered={false}>
+            <Card className="diagnosis-card diagnosis-placeholder-card" variant="borderless">
               <div className="diagnosis-placeholder">
                 <RiseOutlined className="diagnosis-placeholder-icon" />
                 <Title level={5}>Chưa chọn khu vực</Title>
@@ -926,9 +927,9 @@ ${alertsHtml}
           {trendData.length > 0 ? (
             <SubsidenceChart data={trendData} title="Xu hướng sụt lún (30 ngày)" />
           ) : (
-            <Card className="diagnosis-card" bordered={false} title="Xu hướng sụt lún (30 ngày)">
+            <Card className="diagnosis-card" variant="borderless" title="Xu hướng sụt lún (30 ngày)">
               <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Spin tip="Đang tải dữ liệu..." />
+                <Spin tip="Đang tải dữ liệu..."><div style={{ minHeight: 80 }} /></Spin>
               </div>
             </Card>
           )}
@@ -936,7 +937,7 @@ ${alertsHtml}
       </Row>
 
       {/* Quy trình chẩn đoán - trạng thái theo bước người dùng đang ở */}
-      <Card className="diagnosis-card diagnosis-process-card" bordered={false}>
+      <Card className="diagnosis-card diagnosis-process-card" variant="borderless">
         <div className="diagnosis-card-header">
           <CheckCircleOutlined className="diagnosis-card-icon" />
           <span>Quy trình chẩn đoán</span>
