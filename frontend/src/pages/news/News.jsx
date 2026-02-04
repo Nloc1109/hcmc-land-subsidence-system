@@ -31,7 +31,7 @@ const NewsPage = () => {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const mounted = useRef(true);
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
   const loadFromCacheOnly = () => {
     const cache = getNewsCache();

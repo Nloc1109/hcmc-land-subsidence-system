@@ -22,7 +22,25 @@ function MapFlyTo({ selectedPosition, zoom = 14 }) {
   return null;
 }
 
-const MonitoringMap = ({ areas = [], height = '400px', selectedPosition = null }) => {
+/** Gắn sự kiện click bản đồ và gọi onMapClick(lat, lng) */
+function MapClickHandler({ onMapClick }) {
+  const map = useMap();
+  useEffect(() => {
+    if (typeof onMapClick !== 'function') return;
+    const handler = (e) => onMapClick(e.latlng.lat, e.latlng.lng);
+    map.on('click', handler);
+    return () => map.off('click', handler);
+  }, [map, onMapClick]);
+  return null;
+}
+
+const MonitoringMap = ({
+  areas = [],
+  height = '400px',
+  selectedPosition = null,
+  clickedPoint = null,
+  onMapClick = null,
+}) => {
   const mapRef = useRef(null);
 
   // Default center: TPHCM
@@ -80,11 +98,27 @@ const MonitoringMap = ({ areas = [], height = '400px', selectedPosition = null }
         scrollWheelZoom={true}
       >
         <MapFlyTo selectedPosition={selectedPosition} zoom={14} />
+        <MapClickHandler onMapClick={onMapClick} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+        {/* Điểm click khảo sát 50m: marker + vòng tròn bán kính 50m */}
+        {clickedPoint && clickedPoint.lat != null && clickedPoint.lng != null && (
+          <>
+            <Marker position={[clickedPoint.lat, clickedPoint.lng]} />
+            <Circle
+              center={[clickedPoint.lat, clickedPoint.lng]}
+              radius={50}
+              pathOptions={{
+                color: '#2563eb',
+                fillColor: '#2563eb',
+                fillOpacity: 0.15,
+                weight: 2,
+              }}
+            />
+          </>
+        )}
         {areas.map((area) => (
           <div key={area.areaId}>
             <Marker
