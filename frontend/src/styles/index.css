@@ -103,3 +103,8 @@ a {
 a:hover {
   color: var(--accent-hover);
 }
+<<<<<<< Updated upstream
+=======
+/* Import common page styles */
+@import './pages.css';
+>>>>>>> Stashed changes
