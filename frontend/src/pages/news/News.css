@@ -12,6 +12,36 @@
   flex-shrink: 0;
 }
 
+.news-system-toolbar {
+  margin-bottom: 16px;
+}
+
+.news-system-item {
+  cursor: pointer;
+}
+
+.news-system-item:hover {
+  background: #fafafa;
+}
+
+.news-detail-content.news-html-content {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.news-detail-content.news-html-content a {
+  color: #1890ff;
+}
+
+.news-detail-content.news-html-content a:hover {
+  text-decoration: underline;
+}
+
+.news-detail-content.news-plain-content {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
 @media (max-width: 576px) {
   .news-page-header {
     flex-direction: column;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Space, Tag, Badge } from 'antd';
 import {
@@ -78,7 +78,7 @@ const MainLayout = () => {
   const isAnalyst = userRole === 'Analyst';
   const isViewer = userRole === 'Viewer';
   const isOperator = userRole === 'Operator';
-  const isManager = userRole === 'Manager';
+
 
   const menuItems = isAuthenticated
     ? [
@@ -94,8 +94,8 @@ const MainLayout = () => {
           icon: <MailOutlined />,
           label: 'Hộp thư',
         },
-        // Viewer, Manager, Analyst, Admin: Tin tức
-        ...((isViewer || isManager || isAnalyst || isAdmin)
+        // Tất cả role: Tin tức (Viewer, Analyst, Admin, Operator)
+        ...((isViewer || isAnalyst || isAdmin || isOperator)
           ? [
               {
                 key: '/news',
@@ -104,8 +104,8 @@ const MainLayout = () => {
               },
             ]
           : []),
-        // Manager, Analyst, Admin: Báo cáo
-        ...((isManager || isAnalyst || isAdmin)
+        // Analyst, Admin: Báo cáo
+        ...((isAnalyst || isAdmin)
           ? [
               {
                 key: '/reports',
@@ -114,8 +114,8 @@ const MainLayout = () => {
               },
             ]
           : []),
-        // Operator, Manager, Admin: Chẩn đoán
-        ...((isOperator || isManager || isAdmin)
+        // Operator, Admin: Chẩn đoán
+        ...((isOperator || isAdmin)
           ? [
               {
                 key: '/diagnosis',
@@ -124,8 +124,8 @@ const MainLayout = () => {
               },
             ]
           : []),
-        // Operator, Manager, Admin: AI Dự đoán
-        ...((isOperator || isManager || isAdmin)
+        // Operator, Admin: AI Dự đoán
+        ...((isOperator || isAdmin)
           ? [
               {
                 key: '/ai-prediction',

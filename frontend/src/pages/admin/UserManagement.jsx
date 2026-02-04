@@ -6,7 +6,7 @@ import {
   Form,
   Input,
   Select,
-  message,
+  App,
   Space,
   Tag,
   Popconfirm,
@@ -33,6 +33,7 @@ import './Admin.css';
 const { Search } = Input;
 
 const UserManagement = () => {
+  const { message } = App.useApp();
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,8 @@ const UserManagement = () => {
   const loadRoles = async () => {
     try {
       const data = await authApi.getRoles();
-      setRoles(data.roles || []);
+      const list = (data.roles || []).filter((r) => (r.RoleName || r.roleName) !== 'Manager');
+      setRoles(list);
     } catch (error) {
       console.error('Error loading roles:', error);
     }
@@ -169,7 +171,7 @@ const UserManagement = () => {
       dataIndex: 'RoleName',
       key: 'RoleName',
       render: (role) => (
-        <Tag color={role === 'Admin' ? 'red' : role === 'Manager' ? 'blue' : 'default'}>
+        <Tag color={role === 'Admin' ? 'red' : 'default'}>
           {role}
         </Tag>
       ),

@@ -36,13 +36,13 @@ function App() {
               <Route index element={<HomePage />} />
               
               {/* Viewer: Chỉ Trang chủ và Tin tức */}
-              <Route element={<RoleBasedRoute allowedRoles={['Viewer', 'Admin', 'Manager', 'Analyst', 'Operator']} />}>
+              <Route element={<RoleBasedRoute allowedRoles={['Viewer', 'Admin', 'Analyst', 'Operator']} />}>
                 <Route path="news" element={<NewsPage />} />
                 <Route path="inbox" element={<InboxPage />} />
               </Route>
               
               {/* Analyst: Trang chủ, Báo cáo, Phân tích chuyên sâu */}
-              <Route element={<RoleBasedRoute allowedRoles={['Analyst', 'Admin', 'Manager']} />}>
+              <Route element={<RoleBasedRoute allowedRoles={['Analyst', 'Admin']} />}>
                 <Route path="reports" element={<ReportsPage />} />
               </Route>
               
@@ -51,11 +51,11 @@ function App() {
               </Route>
               
               {/* Operator: Trang chủ, Chẩn đoán, AI Dự đoán */}
-              <Route element={<RoleBasedRoute allowedRoles={['Operator', 'Admin', 'Manager']} />}>
+              <Route element={<RoleBasedRoute allowedRoles={['Operator', 'Admin']} />}>
                 <Route path="diagnosis" element={<DiagnosisPage />} />
               </Route>
               
-              <Route element={<RoleBasedRoute allowedRoles={['Operator', 'Admin', 'Manager']} />}>
+              <Route element={<RoleBasedRoute allowedRoles={['Operator', 'Admin']} />}>
                 <Route path="ai-prediction" element={<AiPredictionPage />} />
               </Route>
               

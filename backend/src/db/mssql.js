@@ -4,7 +4,11 @@ import mssql from 'mssql';
 dotenv.config();
 
 
+<<<<<<< HEAD
 const DB_HOST = process.env.DB_HOST || 'DESKTOP-QH7JC2G';
+=======
+const DB_HOST = process.env.DB_HOST || 'DESKTOP-B7F3HIU';
+>>>>>>> a548348f34b1c79483d59362e110f49c423d37c0
 
 const DB_NAME = process.env.DB_NAME || 'HCMC_LandSubsidence';
 const DB_USER = process.env.DB_USER || 'sa';

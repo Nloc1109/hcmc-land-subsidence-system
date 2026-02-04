@@ -4,31 +4,33 @@ import {
   List,
   Button,
   Modal,
-  Form,
-  Input,
-  Select,
   Tag,
   Space,
   Typography,
   Empty,
   Spin,
-  message,
+  App,
+  message as antdMessage,
   Segmented,
+  Checkbox,
+  Popconfirm,
+  Pagination,
 } from 'antd';
 import {
   MailOutlined,
-  SendOutlined,
   UserOutlined,
   FileTextOutlined,
   PaperClipOutlined,
   DownloadOutlined,
   EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
 import notificationsApi from '../../api/notifications';
-import { useAuthStore } from '../../store/auth/useAuthStore';
 import SendReportButton from '../../components/SendReportButton';
 import './Inbox.css';
 
@@ -51,38 +53,49 @@ const getAttachmentFileName = (n) => n?.AttachmentFileName ?? n?.attachmentFileN
 const getAttachmentMimeType = (n) => n?.AttachmentMimeType ?? n?.attachmentMimeType ?? null;
 const hasAttachment = (n) => !!getAttachmentFileName(n);
 
+/** Vai trò người gửi → nhãn nguồn báo cáo (Operator, Admin, Analyst; Manager ẩn) */
+const ROLE_SOURCE_LABELS = {
+  Operator: 'Phòng vận hành',
+  Admin: 'Quản trị',
+  Analyst: 'Phân tích',
+};
+const getSourceLabel = (role) => (role && ROLE_SOURCE_LABELS[role]) || null;
+
 const InboxPage = () => {
-  const { user } = useAuthStore();
+  const appApi = App.useApp();
+  const message = appApi?.message ?? antdMessage;
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [inboxTab, setInboxTab] = useState('inbox'); // 'inbox' | 'sent'
   const [filter, setFilter] = useState('all'); // all | unread (chỉ cho thư đến)
-  const [sendModalOpen, setSendModalOpen] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
   const [attachmentBlobUrl, setAttachmentBlobUrl] = useState(null);
   const [attachmentLoading, setAttachmentLoading] = useState(false);
-  const [recipients, setRecipients] = useState([]);
-  const [sending, setSending] = useState(false);
-  const [form] = Form.useForm();
+  const [editMode, setEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const loadNotifications = async () => {
     setLoading(true);
     try {
       if (inboxTab === 'sent') {
-        const data = await notificationsApi.getSentList({ page: 1, limit: 50 });
+        const data = await notificationsApi.getSentList({ page, limit: pageSize });
         setItems(data.items || []);
         setTotal(data.total || 0);
       } else {
-        const params = filter === 'unread' ? { unreadOnly: 'true' } : {};
+        const params = { page, limit: pageSize, ...(filter === 'unread' ? { unreadOnly: 'true' } : {}) };
         const data = await notificationsApi.getList(params);
         setItems(data.items || []);
         setTotal(data.total || 0);
       }
     } catch (err) {
-      message.error(inboxTab === 'sent' ? 'Không tải được thư đã gửi' : 'Không tải được thông báo');
+      message?.error(inboxTab === 'sent' ? 'Không tải được thư đã gửi' : 'Không tải được thông báo');
       setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -96,9 +109,29 @@ const InboxPage = () => {
   };
 
   useEffect(() => {
-    loadNotifications();
-    if (inboxTab === 'inbox') loadUnreadCount();
+    setPage(1);
   }, [filter, inboxTab]);
+
+  useEffect(() => {
+    loadNotifications();
+    if (inboxTab === 'inbox') {
+      const t = setTimeout(() => loadUnreadCount(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [page, filter, inboxTab]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const handleListWheel = (e) => {
+    if (totalPages <= 1) return;
+    if (e.deltaY > 0 && page < totalPages) {
+      e.preventDefault();
+      setPage((p) => p + 1);
+    } else if (e.deltaY < 0 && page > 1) {
+      e.preventDefault();
+      setPage((p) => p - 1);
+    }
+  };
 
   const handleMarkRead = async (id) => {
     try {
@@ -121,7 +154,7 @@ const InboxPage = () => {
           const url = URL.createObjectURL(blob);
           setAttachmentBlobUrl(url);
         })
-        .catch(() => message.error('Không tải được file đính kèm'))
+        .catch(() => message?.error?.('Không tải được file đính kèm. Thử mở lại thư sau vài giây.'))
         .finally(() => setAttachmentLoading(false));
     }
   };
@@ -142,52 +175,56 @@ const InboxPage = () => {
     a.click();
   };
 
-  const openSendModal = async () => {
-    setSendModalOpen(true);
-    form.resetFields();
-    try {
-      const data = await notificationsApi.getRecipients();
-      setRecipients(data.recipients || []);
-    } catch (err) {
-      message.error('Không tải được danh sách người nhận');
-      setRecipients([]);
-    }
+  const toggleEditMode = () => {
+    setEditMode(true);
+    setSelectedIds(new Set());
   };
 
-  const handleSend = async () => {
+  const exitEditMode = () => {
+    setEditMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(items.map((n) => n.NotificationId)));
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
     try {
-      const values = await form.validateFields();
-      setSending(true);
-      const payload = {
-        title: values.title,
-        message: values.message || undefined,
-        notificationType: values.notificationType || 'Report',
-      };
-      if (values.sendToType === 'role') {
-        payload.toRoleName = values.toRoleName;
-      } else {
-        payload.toUserId = values.toUserId;
+      let ok = 0;
+      let fail = 0;
+      for (const id of selectedIds) {
+        try {
+          await notificationsApi.delete(id);
+          ok += 1;
+        } catch (_) {
+          fail += 1;
+        }
       }
-      await notificationsApi.send(payload);
-      message.success('Đã gửi thông báo');
-      setSendModalOpen(false);
-      form.resetFields();
-      loadNotifications();
-      loadUnreadCount();
-    } catch (err) {
-      if (err.errorFields) return;
-      message.error(err.response?.data?.message || 'Gửi thất bại');
+      if (ok) {
+        message?.success?.(`Đã xóa ${ok} thông báo${fail ? `, ${fail} lỗi` : ''}`);
+        setItems((prev) => prev.filter((n) => !selectedIds.has(n.NotificationId)));
+        setTotal((t) => Math.max(0, t - ok));
+        loadUnreadCount();
+      }
+      if (fail) message?.error?.(`Không xóa được ${fail} thông báo`);
+      exitEditMode();
     } finally {
-      setSending(false);
+      setDeleting(false);
     }
   };
-
-  const recipientByRole = recipients.reduce((acc, r) => {
-    const role = r.RoleName || r.roleName || 'Khác';
-    if (!acc[role]) acc[role] = [];
-    acc[role].push(r);
-    return acc;
-  }, {});
 
   return (
     <div className="page-container inbox-page">
@@ -200,58 +237,110 @@ const InboxPage = () => {
             Nhận và gửi thông báo giữa các vai trò (phân tích → điều phối, quản lý → chuyên viên, ...)
           </Text>
         </div>
-        <Space>
-          <SendReportButton sourcePageName="Hộp thư" type="default" />
-          <Button type="primary" icon={<SendOutlined />} onClick={openSendModal}>
-            Gửi thông báo
-          </Button>
-        </Space>
+        <SendReportButton sourcePageName="Hộp thư" type="default" />
       </div>
 
       <Card className="inbox-card">
         <div className="inbox-toolbar">
-          <Segmented
-            value={inboxTab}
-            onChange={setInboxTab}
-            options={[
-              { label: 'Thư đến', value: 'inbox' },
-              { label: 'Thư đã gửi', value: 'sent' },
-            ]}
-            style={{ marginBottom: inboxTab === 'inbox' ? 12 : 0 }}
-          />
-          {inboxTab === 'inbox' && (
-            <Segmented
-              value={filter}
-              onChange={setFilter}
-              options={[
-                { label: 'Tất cả', value: 'all' },
-                { label: `Chưa đọc (${unreadCount})`, value: 'unread' },
-              ]}
-              size="small"
-              style={{ marginLeft: 8 }}
-            />
-          )}
-        </div>
-        {loading ? (
-          <div className="inbox-loading">
-            <Spin tip="Đang tải..." />
+          <div className="inbox-toolbar-left">
+            <div className="inbox-toolbar-segments">
+              <Segmented
+                value={inboxTab}
+                onChange={(v) => { setInboxTab(v); if (editMode) exitEditMode(); }}
+                options={[
+                  { label: 'Thư đến', value: 'inbox' },
+                  { label: 'Thư đã gửi', value: 'sent' },
+                ]}
+                size="small"
+              />
+              {inboxTab === 'inbox' && (
+                <Segmented
+                  value={filter}
+                  onChange={setFilter}
+                  options={[
+                    { label: 'Tất cả', value: 'all' },
+                    { label: `Chưa đọc (${unreadCount})`, value: 'unread' },
+                  ]}
+                  size="small"
+                />
+              )}
+            </div>
           </div>
-        ) : items.length === 0 ? (
-          <Empty description={inboxTab === 'sent' ? 'Chưa gửi thư nào' : 'Chưa có thông báo nào'} />
-        ) : (
-          <List
-            itemLayout="horizontal"
-            dataSource={items}
-            renderItem={(n) => {
+          <Space wrap className="inbox-toolbar-actions">
+            {editMode ? (
+              <>
+                <Button size="small" onClick={selectAll}>
+                  Chọn tất cả
+                </Button>
+                <Popconfirm
+                  title="Xóa thông báo đã chọn?"
+                  description={`Bạn sẽ xóa ${selectedIds.size} thông báo. Không thể hoàn tác.`}
+                  onConfirm={handleDeleteSelected}
+                  okText="Xóa"
+                  cancelText="Hủy"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={deleting}
+                    disabled={selectedIds.size === 0}
+                  >
+                    Xóa
+                  </Button>
+                </Popconfirm>
+                <Button type="primary" size="small" icon={<CheckOutlined />} onClick={exitEditMode}>
+                  Xong
+                </Button>
+              </>
+            ) : (
+              <Button icon={<EditOutlined />} onClick={toggleEditMode}>
+                Điều chỉnh
+              </Button>
+            )}
+          </Space>
+        </div>
+        <div
+          className="inbox-list-area"
+          onWheel={handleListWheel}
+          style={{ touchAction: 'pan-y' }}
+        >
+          {loading ? (
+            <div className="inbox-loading">
+              <Spin tip="Đang tải..."><div style={{ minHeight: 120 }} /></Spin>
+            </div>
+          ) : items.length === 0 ? (
+            <Empty description={inboxTab === 'sent' ? 'Chưa gửi thư nào' : 'Chưa có thông báo nào'} />
+          ) : (
+            <>
+              <List
+                itemLayout="horizontal"
+                dataSource={items}
+                renderItem={(n) => {
               const typeInfo = TYPE_LABELS[n.NotificationType] || { label: n.NotificationType, color: 'default' };
               const isSent = inboxTab === 'sent';
               const recipientName = n.RecipientFullName || n.RecipientUsername;
               const recipientRole = n.RecipientRole;
+              const id = n.NotificationId;
+              const isSelected = selectedIds.has(id);
+              const onRowClick = editMode
+                ? (e) => toggleSelect(id, e)
+                : () => openDetail(n);
               return (
                 <List.Item
-                  className={`inbox-item ${!isSent && !n.IsRead ? 'inbox-item-unread' : ''}`}
-                  onClick={() => openDetail(n)}
+                  className={`inbox-item ${!isSent && !n.IsRead ? 'inbox-item-unread' : ''} ${editMode ? 'inbox-item-edit' : ''} ${isSelected ? 'inbox-item-selected' : ''}`}
+                  onClick={onRowClick}
                   style={{ cursor: 'pointer' }}
+                  extra={
+                    editMode ? (
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={(e) => toggleSelect(id, e)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : null
+                  }
                 >
                   <List.Item.Meta
                     avatar={
@@ -270,76 +359,107 @@ const InboxPage = () => {
                       )
                     }
                     title={
-                      <Space>
-                        <span>{n.Title}</span>
+                      <Space size="small" wrap className="inbox-item-title-row">
+                        <Text ellipsis={{ tooltip: n.Title }} className="inbox-item-title-text">
+                          {n.Title}
+                        </Text>
                         <Tag color={typeInfo.color}>{typeInfo.label}</Tag>
                         {!isSent && !n.IsRead && <Tag color="blue">Mới</Tag>}
                       </Space>
                     }
                     description={
-                      <>
-                        {isSent ? (
-                          recipientName && (
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              Đến: {recipientName}
-                              {recipientRole && ` (${recipientRole})`}
-                            </Text>
-                          )
-                        ) : (
-                          (n.SenderFullName || n.SenderUsername) && (
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              Từ: {n.SenderFullName || n.SenderUsername}
-                              {(n.SenderRole || n.senderRole) && ` (${n.SenderRole || n.senderRole})`}
-                            </Text>
-                          )
-                        )}
+                      <div className="inbox-item-desc">
+                        <div className="inbox-item-meta-line">
+                          {isSent ? (
+                            recipientName && (
+                              <Text type="secondary" className="inbox-item-meta">
+                                Đến: {recipientName}
+                                {recipientRole && ` (${recipientRole})`}
+                              </Text>
+                            )
+                          ) : (
+                            (n.SenderFullName || n.SenderUsername) && (
+                              <Text type="secondary" className="inbox-item-meta">
+                                Từ: {n.SenderFullName || n.SenderUsername}
+                                {(n.SenderRole || n.senderRole) && ` (${n.SenderRole || n.senderRole})`}
+                              </Text>
+                            )
+                          )}
+                          <Text type="secondary" className="inbox-item-meta inbox-item-time">
+                            {dayjs(n.CreatedAt).fromNow()}
+                            {hasAttachment(n) && (
+                              <>
+                                {' · '}
+                                <PaperClipOutlined /> Đính kèm
+                              </>
+                            )}
+                          </Text>
+                        </div>
                         {n.Message && (
                           <div className="inbox-message-preview">{n.Message}</div>
                         )}
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {dayjs(n.CreatedAt).fromNow()}
-                          {hasAttachment(n) && (
-                            <>
-                              {' · '}
-                              <PaperClipOutlined /> File đính kèm
-                            </>
-                          )}
-                        </Text>
-                      </>
+                      </div>
                     }
                   />
                 </List.Item>
               );
             }}
-          />
-        )}
+              />
+              {total > pageSize && (
+                <div className="inbox-pagination-wrap">
+                  <Pagination
+                    current={page}
+                    total={total}
+                    pageSize={pageSize}
+                    onChange={setPage}
+                    showSizeChanger={false}
+                    showPrevNextJumpers={false}
+                    prevIcon={<span>‹</span>}
+                    nextIcon={<span>›</span>}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </Card>
 
       <Modal
-        title={detailItem?.Title || 'Chi tiết thư'}
+        title={
+          <Text ellipsis={{ tooltip: detailItem?.Title }} style={{ maxWidth: 480, display: 'block' }}>
+            {detailItem?.Title || 'Chi tiết thư'}
+          </Text>
+        }
         open={!!detailItem}
         onCancel={closeDetail}
         footer={[
-          <Button key="close" onClick={closeDetail}>
+          <Button key="close" type="primary" onClick={closeDetail}>
             Đóng
           </Button>,
         ]}
         width={720}
-        destroyOnClose
+        destroyOnHidden
         className="inbox-detail-modal"
       >
         {detailItem && (
           <div className="inbox-detail-content">
             <div className="inbox-detail-meta">
-              {detailItem.SenderFullName && (
-                <Text type="secondary">
-                  Từ: {detailItem.SenderFullName}
-                  {detailItem.SenderRole && ` (${detailItem.SenderRole})`}
+              <div className="inbox-detail-meta-row">
+                {detailItem.SenderFullName && (
+                  <Text type="secondary">
+                    Từ: {detailItem.SenderFullName}
+                    {detailItem.SenderRole && ` (${detailItem.SenderRole})`}
+                  </Text>
+                )}
+                <Text type="secondary" className="inbox-detail-time">
+                  {dayjs(detailItem.CreatedAt).format('DD/MM/YYYY HH:mm')}
+                </Text>
+              </div>
+              {getSourceLabel(detailItem.SenderRole || detailItem.senderRole) && (
+                <Text type="secondary" className="inbox-detail-source">
+                  Nguồn báo cáo: {getSourceLabel(detailItem.SenderRole || detailItem.senderRole)}
                 </Text>
               )}
-              <Text type="secondary" style={{ marginLeft: 8 }}>
-                {dayjs(detailItem.CreatedAt).format('DD/MM/YYYY HH:mm')}
-              </Text>
             </div>
             {detailItem.Message && (
               <div className="inbox-detail-message">
@@ -403,68 +523,6 @@ const InboxPage = () => {
             </div>
           </div>
         )}
-      </Modal>
-
-      <Modal
-        title="Gửi thông báo"
-        open={sendModalOpen}
-        onCancel={() => setSendModalOpen(false)}
-        onOk={handleSend}
-        confirmLoading={sending}
-        okText="Gửi"
-        width={520}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical" initialValues={{ sendToType: 'user', notificationType: 'Report' }}>
-          <Form.Item name="sendToType" label="Gửi tới">
-            <Select
-              options={[
-                { value: 'user', label: 'Một người cụ thể' },
-                { value: 'role', label: 'Cả vai trò (ví dụ: tất cả Người vận hành)' },
-              ]}
-              onChange={() => form.setFieldValue('toUserId', undefined) || form.setFieldValue('toRoleName', undefined)}
-            />
-          </Form.Item>
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.sendToType !== curr.sendToType}>
-            {({ getFieldValue }) =>
-              getFieldValue('sendToType') === 'role' ? (
-                <Form.Item name="toRoleName" label="Vai trò nhận" rules={[{ required: true, message: 'Chọn vai trò' }]}>
-                  <Select
-                    placeholder="Chọn vai trò"
-                    options={Object.keys(recipientByRole).map((role) => ({ value: role, label: role }))}
-                  />
-                </Form.Item>
-              ) : (
-                <Form.Item name="toUserId" label="Người nhận" rules={[{ required: true, message: 'Chọn người nhận' }]}>
-                  <Select
-                    placeholder="Chọn người nhận"
-                    showSearch
-                    optionFilterProp="label"
-                    options={recipients.map((r) => ({
-                      value: r.UserId,
-                      label: `${r.FullName || r.Username} (${r.RoleName})`,
-                    }))}
-                  />
-                </Form.Item>
-              )
-            }
-          </Form.Item>
-          <Form.Item name="notificationType" label="Loại thông báo">
-            <Select
-              options={[
-                { value: 'Report', label: 'Báo cáo phân tích' },
-                { value: 'Task', label: 'Nhiệm vụ' },
-                { value: 'Coordination', label: 'Điều phối' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Nhập tiêu đề' }]}>
-            <Input placeholder="Ví dụ: Báo cáo phân tích tháng 1 gửi điều phối" />
-          </Form.Item>
-          <Form.Item name="message" label="Nội dung">
-            <Input.TextArea rows={3} placeholder="Nội dung chi tiết (tùy chọn)" />
-          </Form.Item>
-        </Form>
       </Modal>
     </div>
   );

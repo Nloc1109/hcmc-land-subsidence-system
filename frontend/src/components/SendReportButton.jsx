@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Button, Modal, Form, Select, Input, message } from 'antd';
+import { Button, Modal, Form, Select, Input, App } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import notificationsApi from '../api/notifications';
+import { useAuthStore } from '../store/auth/useAuthStore';
 import './SendReportButton.css';
+
+/** Vai trò → nhãn dùng trong tiêu đề thư (Operator, Admin, Analyst; Manager ẩn) */
+const ROLE_TITLE_LABELS = {
+  Operator: 'Phòng vận hành',
+  Admin: 'Quản trị',
+  Analyst: 'Phân tích',
+};
+function getRoleTitleLabel(role) {
+  if (!role || typeof role !== 'string') return 'Hệ thống';
+  return ROLE_TITLE_LABELS[role.trim()] || role.trim();
+}
 
 /**
  * Chuyển reportData (string hoặc object) thành chuỗi để gửi lên server / in vào PDF.
@@ -24,17 +36,21 @@ function serializeReportData(reportData) {
 /**
  * Nút "Báo cáo" – báo cáo kịp thời tới vai trò/người nhận.
  * Luồng: Chọn vai trò → Chọn người nhận (hoặc gửi cả vai trò) → Tiêu đề tự sinh, chỉ điền nội dung chi tiết.
- * @param {string} sourcePageName - Tên trang (hiển thị trong tiêu đề tự sinh), ví dụ: "Trang chủ", "Báo cáo", "Chẩn đoán"
+ * @param {string} [sourcePageName] - Không dùng cho tiêu đề nữa; tiêu đề lấy theo vai trò người gửi (Phòng vận hành, Quản trị, Phân tích)
  * @param {string} [type='default'] - 'primary' | 'default'
  * @param {boolean} [showLabel=true] - Hiển thị chữ "Báo cáo" cạnh icon
  * @param {string|object|string[]} [reportData] - Số liệu / thông tin cần báo cáo (hiển thị trong PDF/Excel mục "Số liệu cần báo cáo")
  */
-const SendReportButton = ({ sourcePageName = 'Hệ thống', type = 'default', showLabel = true, reportData }) => {
+const SendReportButton = ({ sourcePageName, type = 'default', showLabel = true, reportData }) => {
+  const { message } = App.useApp();
+  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [recipients, setRecipients] = useState([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [sending, setSending] = useState(false);
   const [form] = Form.useForm();
+
+  const senderRoleLabel = getRoleTitleLabel(user?.role || user?.RoleName || user?.roleName);
 
   const recipientByRole = recipients.reduce((acc, r) => {
     const role = r.RoleName || r.roleName || 'Khác';
@@ -45,7 +61,7 @@ const SendReportButton = ({ sourcePageName = 'Hệ thống', type = 'default', s
   const roleOptions = Object.keys(recipientByRole).sort().map((role) => ({ value: role, label: role }));
 
   const generateTitle = () => {
-    return `Báo cáo từ ${sourcePageName} - ${dayjs().format('DD/MM/YYYY HH:mm')}`;
+    return `Báo cáo từ ${senderRoleLabel} - ${dayjs().format('DD/MM/YYYY HH:mm')}`;
   };
 
   const openModal = async () => {
@@ -55,7 +71,8 @@ const SendReportButton = ({ sourcePageName = 'Hệ thống', type = 'default', s
     setLoadingRecipients(true);
     try {
       const data = await notificationsApi.getRecipients();
-      setRecipients(data.recipients || []);
+      const list = (data.recipients || []).filter((r) => (r.RoleName || r.roleName) !== 'Manager');
+      setRecipients(list);
     } catch (err) {
       message.error('Không tải được danh sách người nhận');
       setRecipients([]);
@@ -128,7 +145,7 @@ const SendReportButton = ({ sourcePageName = 'Hệ thống', type = 'default', s
         confirmLoading={sending}
         okText="Gửi báo cáo"
         width={520}
-        destroyOnClose
+        destroyOnHidden
         className="send-report-modal"
       >
         <p className="send-report-desc">

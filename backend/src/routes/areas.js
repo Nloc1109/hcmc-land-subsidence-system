@@ -57,7 +57,9 @@ router.get('/top-risk', async (req, res) => {
     );
   } catch (error) {
     console.error('Error fetching top risk areas:', error);
-    res.status(500).json({ message: 'Lỗi khi lấy top khu vực rủi ro cao' });
+    if (!res.headersSent) {
+      res.status(200).json([]);
+    }
   }
 });
 

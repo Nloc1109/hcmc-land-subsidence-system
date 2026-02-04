@@ -5,6 +5,7 @@ Hệ thống web quản lý và giám sát quá trình sụt lún đất tại T
 ## 🛠️ Công nghệ sử dụng
 
 ### Backend
+
 - **Node.js** + **Express.js** - Server framework
 - **Sequelize** - ORM cho SQL Server
 - **Microsoft SQL Server** - Database
@@ -17,6 +18,7 @@ Hệ thống web quản lý và giám sát quá trình sụt lún đất tại T
 - **Jest** + **Supertest** - Testing framework
 
 ### Frontend
+
 - **ReactJS** (v18) - UI framework
 - **Vite** - Build tool và dev server
 - **Ant Design** (v5) - UI component library
@@ -28,7 +30,9 @@ Hệ thống web quản lý và giám sát quá trình sụt lún đất tại T
 - **Day.js** - Date manipulation
 
 ### Đánh giá công cụ
+
 ✅ **Công cụ hiện tại đã đủ** cho dự án quản lý sụt lún đất:
+
 - Backend có đầy đủ: authentication, validation, security, logging
 - Frontend có đầy đủ: UI components, maps, charts, state management
 - Có thể bổ sung thêm (tùy chọn):
@@ -147,4 +151,3 @@ npm run dev
 ## 📝 License
 
 MIT
-

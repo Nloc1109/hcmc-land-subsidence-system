@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Form, Input, Button, Card, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { Form, Input, Button, Card, Typography, App, Select } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -15,10 +15,31 @@ import './Auth.css';
 const { Title, Text } = Typography;
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
   const message = useMessage();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setRoleLoading(true);
+        const data = await authApi.getRoles();
+        const list = (data.roles || []).filter((r) => (r.RoleName || r.roleName) !== 'Manager');
+        setRoles(list);
+      } catch (error) {
+        // Không chặn đăng ký nếu lỗi, chỉ báo nhẹ
+        console.error('Load roles error:', error);
+        message.warning('Không tải được danh sách vai trò, sẽ dùng vai trò mặc định.');
+      } finally {
+        setRoleLoading(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   const onFinish = async (values) => {
     if (values.password !== values.confirmPassword) {
