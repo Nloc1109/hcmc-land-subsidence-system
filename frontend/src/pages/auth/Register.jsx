@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Select } from 'antd';
+import { useState } from 'react';
+import { Form, Input, Button, Card, Typography } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -8,6 +8,7 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
+import { useMessage } from '../../hooks/useMessage';
 import authApi from '../../api/auth';
 import './Auth.css';
 
@@ -15,28 +16,9 @@ const { Title, Text } = Typography;
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const message = useMessage();
   const [loading, setLoading] = useState(false);
-  const [roleLoading, setRoleLoading] = useState(false);
-  const [roles, setRoles] = useState([]);
   const [form] = Form.useForm();
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        setRoleLoading(true);
-        const data = await authApi.getRoles();
-        setRoles(data.roles || []);
-      } catch (error) {
-        // Không chặn đăng ký nếu lỗi, chỉ báo nhẹ
-        console.error('Load roles error:', error);
-        message.warning('Không tải được danh sách vai trò, sẽ dùng vai trò mặc định.');
-      } finally {
-        setRoleLoading(false);
-      }
-    };
-
-    fetchRoles();
-  }, []);
 
   const onFinish = async (values) => {
     if (values.password !== values.confirmPassword) {
@@ -52,7 +34,7 @@ const RegisterPage = () => {
         email: values.email,
         phoneNumber: values.phoneNumber,
         password: values.password,
-        roleId: values.roleId, // có thể undefined, backend sẽ dùng mặc định
+        // Không gửi roleId, backend sẽ tự động set role Viewer
       };
 
       await authApi.register(payload);
@@ -147,28 +129,6 @@ const RegisterPage = () => {
                 prefix={<PhoneOutlined />}
                 placeholder="Nhập số điện thoại"
               />
-            </Form.Item>
-
-            <Form.Item
-              name="roleId"
-              label="Vai trò trong hệ thống"
-              tooltip="Admin là mặc định trong hệ thống và không thể tự đăng ký."
-              rules={[
-                { required: true, message: 'Vui lòng chọn vai trò!' },
-              ]}
-            >
-              <Select
-                placeholder="Chọn vai trò (không bao gồm Admin)"
-                loading={roleLoading}
-                allowClear={false}
-              >
-                {roles.map((role) => (
-                  <Select.Option key={role.RoleId} value={role.RoleId}>
-                    {role.RoleName}
-                    {role.Description ? ` - ${role.Description}` : ''}
-                  </Select.Option>
-                ))}
-              </Select>
             </Form.Item>
 
             <Form.Item

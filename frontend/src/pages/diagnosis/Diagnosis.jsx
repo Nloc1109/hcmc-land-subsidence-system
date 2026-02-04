@@ -300,21 +300,23 @@ ${alertsHtml}
       </div>
 
       {/* Bản đồ */}
-      <Card className="diagnosis-card diagnosis-map-card" bordered={false}>
+      <Card className="diagnosis-card diagnosis-map-card">
         <div className="diagnosis-card-header">
           <EnvironmentOutlined className="diagnosis-card-icon" />
           <span>Bản đồ khu vực giám sát</span>
         </div>
         <div className="diagnosis-map-wrapper">
           {mapLoading ? (
-            <div className="diagnosis-map-loading">
-              <Spin size="large" tip="Đang tải bản đồ..." />
+            <div className="diagnosis-map-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+              <Spin size="large" />
+              <Text type="secondary">Đang tải bản đồ...</Text>
             </div>
           ) : (
             <Suspense
               fallback={
-                <div className="diagnosis-map-loading">
-                  <Spin size="large" tip="Đang tải bản đồ..." />
+                <div className="diagnosis-map-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                  <Spin size="large" />
+                  <Text type="secondary">Đang tải bản đồ...</Text>
                 </div>
               }
             >
@@ -336,9 +338,10 @@ ${alertsHtml}
           {trendData.length > 0 ? (
             <SubsidenceChart data={trendData} title="Xu hướng sụt lún (30 ngày)" />
           ) : (
-            <Card className="diagnosis-card" bordered={false} title="Xu hướng sụt lún (30 ngày)">
-              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Spin tip="Đang tải dữ liệu..." />
+            <Card className="diagnosis-card" title="Xu hướng sụt lún (30 ngày)">
+              <div style={{ height: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                <Spin size="large" />
+                <Text type="secondary">Đang tải dữ liệu...</Text>
               </div>
             </Card>
           )}
@@ -348,7 +351,7 @@ ${alertsHtml}
       <Row gutter={[24, 24]}>
         {/* Danh sách khu vực có nguy cơ + Chọn để chẩn đoán */}
         <Col xs={24} lg={14}>
-          <Card className="diagnosis-card" bordered={false}>
+          <Card className="diagnosis-card">
             <div className="diagnosis-card-header">
               <AimOutlined className="diagnosis-card-icon" />
               <span>Chọn khu vực cần chẩn đoán</span>
@@ -415,7 +418,7 @@ ${alertsHtml}
         <Col xs={24} lg={10}>
           {selectedArea ? (
             <>
-              <Card className="diagnosis-card diagnosis-detail-card" bordered={false}>
+              <Card className="diagnosis-card diagnosis-detail-card">
                 <div className="diagnosis-card-header diagnosis-card-header--actions">
                   <span className="diagnosis-card-header-left">
                     <BarChartOutlined className="diagnosis-card-icon" />
@@ -478,7 +481,7 @@ ${alertsHtml}
                 </div>
               </Card>
 
-              <Card className="diagnosis-card" bordered={false}>
+              <Card className="diagnosis-card">
                 <div className="diagnosis-card-header">
                   <BulbOutlined className="diagnosis-card-icon" />
                   <span>Khuyến nghị</span>
@@ -493,7 +496,7 @@ ${alertsHtml}
               </Card>
 
               {alertsForSelected.length > 0 && (
-                <Card className="diagnosis-card" bordered={false}>
+                <Card className="diagnosis-card">
                   <div className="diagnosis-card-header">
                     <BellOutlined className="diagnosis-card-icon" />
                     <span>Cảnh báo liên quan ({alertsForSelected.length})</span>
@@ -527,7 +530,7 @@ ${alertsHtml}
               </Button>
             </>
           ) : (
-            <Card className="diagnosis-card diagnosis-placeholder-card" bordered={false}>
+            <Card className="diagnosis-card diagnosis-placeholder-card">
               <div className="diagnosis-placeholder">
                 <RiseOutlined className="diagnosis-placeholder-icon" />
                 <Title level={5}>Chưa chọn khu vực</Title>
@@ -541,7 +544,7 @@ ${alertsHtml}
       </Row>
 
       {/* Quy trình chẩn đoán - trạng thái theo bước người dùng đang ở */}
-      <Card className="diagnosis-card diagnosis-process-card" bordered={false}>
+      <Card className="diagnosis-card diagnosis-process-card">
         <div className="diagnosis-card-header">
           <CheckCircleOutlined className="diagnosis-card-icon" />
           <span>Quy trình chẩn đoán</span>

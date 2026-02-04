@@ -143,9 +143,9 @@ const NewsPage = () => {
 
       <Card className="page-card">
         {loading && (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <Spin size="large" tip="Đang tải tin tức..." />
-            <Paragraph type="secondary" style={{ marginTop: 16 }}>
+          <div style={{ textAlign: 'center', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <Spin size="large" />
+            <Paragraph type="secondary" style={{ margin: 0 }}>
               Đang tải các bản tin mới nhất về sụt lún đất
             </Paragraph>
           </div>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, message } from 'antd';
+import { Form, Input, Button, Card, Typography } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth/useAuthStore';
+import { useMessage } from '../../hooks/useMessage';
 import authApi from '../../api/auth';
 import './Auth.css';
 
@@ -11,6 +12,7 @@ const { Title, Text } = Typography;
 const LoginPage = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const message = useMessage();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 

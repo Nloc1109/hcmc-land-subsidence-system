@@ -209,9 +209,9 @@ const AiPredictionPage = () => {
       {/* Loading state */}
       {loading && (
         <Card className="page-card">
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <Spin size="large" tip="Đang phân tích và dự đoán thiên tai..." />
-            <Paragraph type="secondary" style={{ marginTop: 16 }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <Spin size="large" />
+            <Paragraph type="secondary" style={{ margin: 0 }}>
               Hệ thống AI đang phân tích khu vực <Text strong>{selectedArea}</Text> và dự đoán các khả năng thiên tai.
               Quá trình này có thể mất 30-60 giây.
             </Paragraph>

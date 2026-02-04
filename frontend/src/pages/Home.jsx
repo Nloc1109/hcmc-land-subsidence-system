@@ -102,8 +102,9 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="home-page loading-container">
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+      <div className="home-page loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <Spin size="large" />
+        <Text type="secondary">Đang tải dữ liệu...</Text>
       </div>
     );
   }
