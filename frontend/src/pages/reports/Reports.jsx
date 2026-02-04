@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import AlertLevelChart from '../../components/charts/AlertLevelChart';
 import SendReportButton from '../../components/SendReportButton';
+import dashboardApi from '../../api/dashboard';
 import './Reports.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTitle, Tooltip, Legend);
@@ -463,6 +464,7 @@ const ReportsPage = () => {
   const [view, setView] = useState(VIEW_MAIN);
   const [districtData, setDistrictData] = useState([]);
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   const [weatherRainfallData, setWeatherRainfallData] = useState([]);
   const [weatherRainfallLoading, setWeatherRainfallLoading] = useState(false);
   const [weatherPastDays, setWeatherPastDays] = useState(7);
@@ -487,6 +489,31 @@ const ReportsPage = () => {
     ];
     return lines.join('\n');
   }, [weatherRainfallData, weatherPastDays]);
+=======
+  const [overviewStats, setOverviewStats] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [districtStats, setDistrictStats] = useState([]);
+
+  // Load dữ liệu tổng quan khi component mount
+  useEffect(() => {
+    const loadOverviewData = async () => {
+      setOverviewLoading(true);
+      try {
+        const stats = await dashboardApi.getDashboardStats();
+        setOverviewStats(stats);
+        
+        const districts = await dashboardApi.getDistrictStats();
+        setDistrictStats(districts);
+      } catch (error) {
+        console.error('Error loading overview data:', error);
+      } finally {
+        setOverviewLoading(false);
+      }
+    };
+    
+    loadOverviewData();
+  }, []);
+>>>>>>> d2e356f0c96a2d197108cad1157470d9cda29705
 
   useEffect(() => {
     if (view !== VIEW_DISTRICT_STATS) return;
@@ -655,8 +682,9 @@ const ReportsPage = () => {
         </div>
 
         {loading ? (
-          <div className="reports-sub-view-loading">
-            <Spin size="large" tip="Đang tải dữ liệu thống kê..." />
+          <div className="reports-sub-view-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <Spin size="large" />
+            <Text type="secondary">Đang tải dữ liệu thống kê...</Text>
           </div>
         ) : (
           <>
@@ -848,6 +876,7 @@ const ReportsPage = () => {
         </div>
       </div>
 
+<<<<<<< HEAD
       <Row gutter={[32, 32]} className="reports-summary-row">
         <Col xs={24} md={8}>
           <Card className="page-card reports-summary-card" title="Tổng quan toàn thành phố">
@@ -871,6 +900,144 @@ const ReportsPage = () => {
           </Card>
         </Col>
       </Row>
+=======
+      {overviewLoading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>
+            <Text type="secondary">Đang tải dữ liệu báo cáo...</Text>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={8}>
+              <Card className="page-card" title="Tổng quan toàn thành phố">
+                {overviewStats ? (
+                  <div>
+                    <Row gutter={[16, 16]}>
+                      <Col span={24}>
+                        <Statistic
+                          title="Tổng số quận/huyện"
+                          value={overviewStats.totalDistricts || 0}
+                          prefix={<EnvironmentOutlined />}
+                          valueStyle={{ color: '#1890ff' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Tổng số khu vực giám sát"
+                          value={overviewStats.totalAreas || 0}
+                          prefix={<EnvironmentOutlined />}
+                          valueStyle={{ color: '#52c41a' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Cảnh báo đang hoạt động"
+                          value={overviewStats.activeAlerts || 0}
+                          prefix={<AlertOutlined />}
+                          valueStyle={{ color: '#ff4d4f' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Tổng số bản ghi"
+                          value={overviewStats.totalRecords || 0}
+                          valueStyle={{ color: '#722ed1' }}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
+                ) : (
+                  <Text type="secondary">Đang tải dữ liệu...</Text>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} md={8}>
+              <Card className="page-card" title="Báo cáo theo quận/huyện">
+                {districtStats.length > 0 ? (
+                  <div>
+                    <div style={{ marginBottom: 16 }}>
+                      <Text strong>Top {Math.min(5, districtStats.length)} quận/huyện có hoạt động sụt lún:</Text>
+                    </div>
+                    <List
+                      size="small"
+                      dataSource={districtStats.slice(0, 5)}
+                      renderItem={(district, index) => (
+                        <List.Item>
+                          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <Text strong>{index + 1}. {district.districtName}</Text>
+                              <Tag color={district.riskLevel === 'Critical' ? 'red' : district.riskLevel === 'High' ? 'orange' : 'blue'} style={{ marginLeft: 8 }}>
+                                {district.riskLevel}
+                              </Tag>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div><Text type="secondary">Tốc độ: </Text><Text strong>{district.avgRate?.toFixed(1) || 0} mm/năm</Text></div>
+                              <div><Text type="secondary">Cảnh báo: </Text><Text strong>{district.alerts || 0}</Text></div>
+                            </div>
+                          </div>
+                        </List.Item>
+                      )}
+                    />
+                    <div style={{ marginTop: 16, textAlign: 'center' }}>
+                      <Button type="link" onClick={goToDistrictStats}>
+                        Xem tất cả quận/huyện →
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Text type="secondary">Chưa có dữ liệu quận/huyện</Text>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} md={8}>
+              <Card className="page-card" title="Báo cáo theo phường/xã">
+                {overviewStats ? (
+                  <div>
+                    <Row gutter={[16, 16]}>
+                      <Col span={24}>
+                        <Statistic
+                          title="Tổng số trạm đo"
+                          value={overviewStats.totalStations || 0}
+                          prefix={<EnvironmentOutlined />}
+                          valueStyle={{ color: '#1890ff' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Thiết bị đang hoạt động"
+                          value={overviewStats.activeDevices || 0}
+                          valueStyle={{ color: '#52c41a' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Cảnh báo nghiêm trọng"
+                          value={overviewStats.criticalAlerts || 0}
+                          prefix={<WarningOutlined />}
+                          valueStyle={{ color: '#ff4d4f' }}
+                        />
+                      </Col>
+                      <Col span={24}>
+                        <Statistic
+                          title="Tổng số đo đạc"
+                          value={overviewStats.totalMeasurements || 0}
+                          valueStyle={{ color: '#722ed1' }}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
+                ) : (
+                  <Text type="secondary">Đang tải dữ liệu...</Text>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </>
+      )}
+>>>>>>> d2e356f0c96a2d197108cad1157470d9cda29705
 
       <Divider className="reports-divider" />
 

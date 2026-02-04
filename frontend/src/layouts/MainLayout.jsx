@@ -16,6 +16,8 @@ import {
   SettingOutlined,
   GlobalOutlined,
   MailOutlined,
+  SendOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth/useAuthStore';
 import notificationsApi from '../api/notifications';
@@ -141,6 +143,16 @@ const MainLayout = () => {
               },
             ]
           : []),
+        // Yêu cầu: Tất cả roles trừ Viewer
+        ...((isManager || isAnalyst || isOperator || isAdmin)
+          ? [
+              {
+                key: '/my-requests',
+                icon: <InboxOutlined />,
+                label: 'Yêu cầu của tôi',
+              },
+            ]
+          : []),
         // Admin: Quản trị
         ...(isAdmin
           ? [
@@ -158,6 +170,11 @@ const MainLayout = () => {
                     key: '/admin/login-logs',
                     icon: <FileTextOutlined />,
                     label: 'Log đăng nhập',
+                  },
+                  {
+                    key: '/admin/requests',
+                    icon: <SendOutlined />,
+                    label: 'Quản lý yêu cầu',
                   },
                 ],
               },
@@ -178,6 +195,8 @@ const MainLayout = () => {
     const path = location.pathname;
     if (path.startsWith('/admin/users')) return ['/admin/users'];
     if (path.startsWith('/admin/login-logs')) return ['/admin/login-logs'];
+    if (path.startsWith('/admin/requests')) return ['/admin/requests'];
+    if (path.startsWith('/my-requests')) return ['/my-requests'];
     if (path.startsWith('/analysis')) return ['/analysis'];
     if (path.startsWith('/inbox')) return ['/inbox'];
     return [path];

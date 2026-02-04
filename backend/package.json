@@ -19,7 +19,9 @@
     "seed:many:clear": "node scripts/seed-many-areas.js --clear",
     "seed:data-management": "node scripts/seed-data-management.js",
     "create:data-tables": "node scripts/create-data-management-tables.js",
-    "cleanup:imports": "node scripts/cleanup-imports.js"
+    "cleanup:imports": "node scripts/cleanup-imports.js",
+    "create:requests-table": "node scripts/create-requests-table.js",
+    "fix:requests-table": "node scripts/fix-requests-table.js"
   },
   "keywords": [
     "land-subsidence",

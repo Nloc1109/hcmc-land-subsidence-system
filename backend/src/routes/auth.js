@@ -71,34 +71,31 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Tên đăng nhập hoặc email đã được sử dụng' });
     }
 
-    // Xác định role theo lựa chọn, nhưng không cho phép Admin
-    let roleWhere = "IsActive = 1 AND RoleName <> 'Admin'";
-    const roleReq = pool.request();
-    if (roleId) {
-      roleReq.input('RoleId', roleId);
-      roleWhere += ' AND RoleId = @RoleId';
-    } else if (roleName) {
-      roleReq.input('RoleName', roleName);
-      roleWhere += ' AND RoleName = @RoleName';
+    // Luôn đăng ký với role Viewer (không cho phép chọn role khác khi đăng ký)
+    let roleRow = null;
+    
+    // Nếu có roleId hoặc roleName được gửi lên, vẫn kiểm tra nhưng chỉ cho phép Viewer
+    if (roleId || roleName) {
+      // Chỉ chấp nhận Viewer, từ chối các role khác
+      const roleReq = pool.request();
+      roleReq.input('ViewerName', 'Viewer');
+      const viewerResult = await roleReq.query(
+        "SELECT TOP 1 * FROM Roles WHERE RoleName = @ViewerName AND IsActive = 1"
+      );
+      roleRow = viewerResult.recordset[0];
+    } else {
+      // Không có roleId/roleName → tự động set Viewer
+      const roleReq = pool.request();
+      roleReq.input('ViewerName', 'Viewer');
+      const viewerResult = await roleReq.query(
+        "SELECT TOP 1 * FROM Roles WHERE RoleName = @ViewerName AND IsActive = 1"
+      );
+      roleRow = viewerResult.recordset[0];
     }
 
-    result = await roleReq.query(`SELECT TOP 1 * FROM Roles WHERE ${roleWhere}`);
-    let roleRow = result.recordset[0];
-
-    // Nếu không tìm thấy → fallback Viewer/User/Admin như logic cũ
+    // Nếu không tìm thấy Viewer → lỗi
     if (!roleRow) {
-      const fallbackNames = ['Viewer', 'User', 'Admin'];
-      for (const name of fallbackNames) {
-        // eslint-disable-next-line no-await-in-loop
-        const fb = await pool
-          .request()
-          .input('Name', name)
-          .query('SELECT TOP 1 * FROM Roles WHERE RoleName = @Name AND IsActive = 1');
-        if (fb.recordset[0]) {
-          roleRow = fb.recordset[0];
-          break;
-        }
-      }
+      return res.status(400).json({ message: 'Không tìm thấy role Viewer trong hệ thống' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
