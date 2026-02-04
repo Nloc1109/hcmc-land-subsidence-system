@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, Spin, message } from 'antd';
 import DeepAnalysisMap from '../../components/maps/DeepAnalysisMap';
 import { getMonitoringAreas } from '../../api/monitoring/areas';
+import SendReportButton from '../../components/SendReportButton';
 import './DeepAnalysis.css';
 
 const DeepAnalysis = () => {
@@ -38,6 +39,7 @@ const DeepAnalysis = () => {
       <Card
         title="Bản đồ Phân tích Chuyên sâu"
         style={{ marginBottom: 24 }}
+        extra={<SendReportButton sourcePageName="Phân tích chuyên sâu" type="default" reportData={deepAnalysisReportData} />}
       >
         <p style={{ marginBottom: 16, color: '#666' }}>
           Bản đồ phân tích chuyên sâu cho phép Analyst xem chi tiết các khu vực giám sát, 

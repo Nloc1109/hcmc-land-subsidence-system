@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Space, Tag } from 'antd';
+import { Layout, Menu, Button, Space, Tag, Badge } from 'antd';
 import {
   HomeOutlined,
   LoginOutlined,
@@ -15,8 +15,10 @@ import {
   FileTextOutlined,
   SettingOutlined,
   GlobalOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth/useAuthStore';
+import notificationsApi from '../api/notifications';
 import CookieConsent from '../components/CookieConsent';
 import './MainLayout.css';
 
@@ -28,6 +30,7 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
   const { isAuthenticated, user, logout } = useAuthStore((state) => ({
     isAuthenticated: state.isAuthenticated,
     user: state.user,
@@ -56,6 +59,15 @@ const MainLayout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Số thông báo chưa đọc (hộp thư)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setInboxUnreadCount(0);
+      return;
+    }
+    notificationsApi.getUnreadCount().then((data) => setInboxUnreadCount(data.unreadCount || 0)).catch(() => {});
+  }, [isAuthenticated, location.pathname]);
+
   // Lấy role từ user (hỗ trợ cả camelCase và PascalCase)
   // Backend trả về 'role', nhưng cũng hỗ trợ 'roleName' để tương thích
   const userRole = user?.role || user?.roleName || user?.RoleName;
@@ -72,6 +84,12 @@ const MainLayout = () => {
           key: '/',
           icon: <HomeOutlined />,
           label: 'Trang chủ',
+        },
+        // Tất cả role: Hộp thư (tương tác giữa các vai trò)
+        {
+          key: '/inbox',
+          icon: <MailOutlined />,
+          label: 'Hộp thư',
         },
         // Viewer, Manager, Analyst, Admin: Tin tức
         ...((isViewer || isManager || isAnalyst || isAdmin)
@@ -161,6 +179,7 @@ const MainLayout = () => {
     if (path.startsWith('/admin/users')) return ['/admin/users'];
     if (path.startsWith('/admin/login-logs')) return ['/admin/login-logs'];
     if (path.startsWith('/analysis')) return ['/analysis'];
+    if (path.startsWith('/inbox')) return ['/inbox'];
     return [path];
   };
 
@@ -239,7 +258,16 @@ const MainLayout = () => {
             </div>
             <div className="header-right">
               {isAuthenticated ? (
-                <Space className="auth-buttons">
+                <Space className="auth-buttons" size="middle">
+                  <Badge count={inboxUnreadCount} size="small" offset={[-2, 2]}>
+                    <Button
+                      type="text"
+                      icon={<MailOutlined />}
+                      onClick={() => navigate('/inbox')}
+                      title="Hộp thư"
+                      className="header-inbox-btn"
+                    />
+                  </Badge>
                   <span>{user?.username}</span>
                   {user?.role && <Tag color="blue">{user.role}</Tag>}
                   <Button

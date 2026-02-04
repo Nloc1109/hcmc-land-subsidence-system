@@ -1,0 +1,149 @@
+.inbox-page {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 48px;
+}
+
+.inbox-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.inbox-header .ant-typography {
+  margin-bottom: 0;
+}
+
+.inbox-card {
+  border-radius: 12px;
+}
+
+.inbox-toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.inbox-loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inbox-item {
+  padding: 16px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.inbox-item-unread {
+  background: rgba(22, 119, 255, 0.06);
+}
+
+.inbox-item:hover.inbox-item-unread {
+  background: rgba(22, 119, 255, 0.1);
+}
+
+.inbox-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e6f4ff;
+  color: #1677ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.inbox-avatar.system {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.inbox-avatar.sent {
+  background: #e6f7e6;
+  color: #389e0d;
+}
+
+.inbox-message-preview {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #595959;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.inbox-item .ant-list-item-meta-title {
+  margin-bottom: 4px;
+}
+
+.inbox-item .ant-list-item-meta-description {
+  margin-bottom: 0;
+}
+
+.inbox-item .ant-list-item-action {
+  margin-left: 16px;
+}
+
+/* Modal chi tiết thư + file đính kèm */
+.inbox-detail-modal .ant-modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.inbox-detail-content {
+  padding: 8px 0;
+}
+
+.inbox-detail-meta {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.inbox-detail-message {
+  margin-bottom: 20px;
+}
+
+.inbox-detail-message-body {
+  margin-top: 8px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inbox-detail-attachment {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.inbox-attachment-viewer {
+  margin-top: 8px;
+}
+
+.inbox-pdf-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.inbox-pdf-iframe {
+  width: 100%;
+  height: 480px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+}

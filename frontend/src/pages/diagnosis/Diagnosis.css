@@ -26,6 +26,10 @@
   min-width: 280px;
 }
 
+.diagnosis-hero-content .send-report-btn {
+  margin-top: 8px;
+}
+
 .diagnosis-hero-title {
   margin-bottom: 8px !important;
   font-size: 1.65rem !important;

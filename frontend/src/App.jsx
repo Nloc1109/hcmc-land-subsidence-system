@@ -14,6 +14,7 @@ import AiPredictionPage from './pages/ai/AiPrediction';
 import UserManagementPage from './pages/admin/UserManagement';
 import LoginLogsPage from './pages/admin/LoginLogs';
 import DeepAnalysisPage from './pages/analysis/DeepAnalysis';
+import InboxPage from './pages/inbox/Inbox';
 import './styles/App.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
               {/* Viewer: Chỉ Trang chủ và Tin tức */}
               <Route element={<RoleBasedRoute allowedRoles={['Viewer', 'Admin', 'Manager', 'Analyst', 'Operator']} />}>
                 <Route path="news" element={<NewsPage />} />
+                <Route path="inbox" element={<InboxPage />} />
               </Route>
               
               {/* Analyst: Trang chủ, Báo cáo, Phân tích chuyên sâu */}

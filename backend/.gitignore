@@ -20,6 +20,9 @@ yarn-error.log*
 coverage/
 .nyc_output/
 
+# Generated files (báo cáo đính kèm PDF/Excel)
+generated/
+
 # Database
 *.sqlite
 *.db

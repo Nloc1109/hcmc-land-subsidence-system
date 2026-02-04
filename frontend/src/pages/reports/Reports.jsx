@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Typography, Card, Row, Col, Tag, List, Progress, Divider, Statistic, Button, Spin, Select, Table, message, Modal } from 'antd';
 import { BarChartOutlined, EnvironmentOutlined, AlertOutlined, WarningOutlined, RiseOutlined, ArrowLeftOutlined, CloudOutlined, EyeOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Bar } from 'react-chartjs-2';
@@ -12,6 +12,7 @@ import {
   Legend,
 } from 'chart.js';
 import AlertLevelChart from '../../components/charts/AlertLevelChart';
+import SendReportButton from '../../components/SendReportButton';
 import './Reports.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTitle, Tooltip, Legend);
@@ -472,6 +473,21 @@ const ReportsPage = () => {
   const [showDistrictCard, setShowDistrictCard] = useState(true);
   const [showWeatherCard, setShowWeatherCard] = useState(true);
 
+  // Số liệu báo cáo đưa vào file PDF/Excel: thời tiết & lượng mưa (nếu đã tải)
+  const reportsPageReportData = useMemo(() => {
+    if (!weatherRainfallData || weatherRainfallData.length === 0) return '';
+    const lines = [
+      `Thống kê thời tiết & lượng mưa (${weatherPastDays} ngày qua) – Nguồn: Open-Meteo`,
+      '',
+      ...weatherRainfallData.map((r) => {
+        const temp = r.avgTemp != null ? `${r.avgTemp.toFixed(1)} °C` : '—';
+        const humidity = r.avgHumidity != null ? `${r.avgHumidity}%` : '—';
+        return `${r.districtName}: Tổng mưa ${r.totalMm?.toFixed(1) ?? '-'} mm | TB/ngày ${r.avgPerDayMm?.toFixed(1) ?? '-'} mm | Nhiệt độ TB ${temp} | Độ ẩm TB ${humidity}`;
+      }),
+    ];
+    return lines.join('\n');
+  }, [weatherRainfallData, weatherPastDays]);
+
   useEffect(() => {
     if (view !== VIEW_DISTRICT_STATS) return;
     setLoading(true);
@@ -819,12 +835,17 @@ const ReportsPage = () => {
   return (
     <div className="page-container reports-page">
       <div className="page-header reports-page-header">
-        <Title level={2}>
-          <BarChartOutlined /> Báo cáo giám sát sụt lún
-        </Title>
-        <Paragraph type="secondary" className="reports-page-subtitle">
-          Tổng hợp các báo cáo, biểu đồ và số liệu thống kê chi tiết theo khu vực, thời gian và loại chỉ số.
-        </Paragraph>
+        <div className="reports-page-header-row">
+          <div>
+            <Title level={2}>
+              <BarChartOutlined /> Báo cáo giám sát sụt lún
+            </Title>
+            <Paragraph type="secondary" className="reports-page-subtitle">
+              Tổng hợp các báo cáo, biểu đồ và số liệu thống kê chi tiết theo khu vực, thời gian và loại chỉ số.
+            </Paragraph>
+          </div>
+          <SendReportButton sourcePageName="Báo cáo" type="primary" reportData={reportsPageReportData} />
+        </div>
       </div>
 
       <Row gutter={[32, 32]} className="reports-summary-row">

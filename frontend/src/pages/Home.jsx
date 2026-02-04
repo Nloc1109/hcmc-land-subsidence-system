@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Typography, 
   Row, 
@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dashboardApi from '../api/dashboard';
+import SendReportButton from '../components/SendReportButton';
 import './Home.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -36,6 +37,21 @@ const HomePage = () => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  const homeReportData = useMemo(() => {
+    if (!stats) return '';
+    const totalAlerts = stats.totalAlerts ?? stats.activeAlerts ?? (stats.criticalAlerts != null && stats.warningAlerts != null ? stats.criticalAlerts + stats.warningAlerts : null);
+    const lines = [
+      'Tổng quan từ Trang chủ',
+      `Tổng số khu vực: ${stats.totalAreas ?? '—'}`,
+      `Tổng số cảnh báo: ${totalAlerts ?? '—'}`,
+      ...(stats.criticalAlerts != null ? [`Cảnh báo nghiêm trọng: ${stats.criticalAlerts}`] : []),
+      ...(stats.warningAlerts != null ? [`Cảnh báo cần theo dõi: ${stats.warningAlerts}`] : []),
+      ...(stats.highRiskAreas != null ? [`Khu vực rủi ro cao: ${stats.highRiskAreas}`] : []),
+      ...(stats.lastUpdated ? [`Cập nhật: ${stats.lastUpdated}`] : []),
+    ];
+    return lines.filter(Boolean).join('\n');
+  }, [stats]);
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -146,6 +162,7 @@ const HomePage = () => {
             >
               Xem báo cáo
             </Button>
+            <SendReportButton sourcePageName="Trang chủ" type="default" reportData={homeReportData} />
           </Space>
         </div>
       </section>

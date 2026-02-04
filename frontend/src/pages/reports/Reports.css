@@ -12,6 +12,14 @@
   margin-bottom: 32px;
 }
 
+.reports-page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .reports-page-subtitle {
   font-size: 15px;
   max-width: 720px;

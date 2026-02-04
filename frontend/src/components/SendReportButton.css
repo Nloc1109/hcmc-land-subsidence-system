@@ -1,0 +1,20 @@
+.send-report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.send-report-modal .send-report-desc {
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 13px;
+}
+
+.send-report-modal .send-report-title-readonly {
+  color: #666;
+  background: #fafafa;
+}
+
+.send-report-modal .ant-form-item-label label {
+  font-weight: 500;
+}

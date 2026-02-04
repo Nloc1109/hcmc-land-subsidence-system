@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import {
   Typography,
   Card,
@@ -39,6 +39,7 @@ import 'dayjs/locale/vi';
 import dashboardApi from '../../api/dashboard';
 import RiskDistributionChart from '../../components/charts/RiskDistributionChart';
 import SubsidenceChart from '../../components/charts/SubsidenceChart';
+import SendReportButton from '../../components/SendReportButton';
 import './Diagnosis.css';
 
 dayjs.extend(relativeTime);
@@ -200,6 +201,44 @@ const DiagnosisPage = () => {
       ? topRiskAreas
       : topRiskAreas.filter((a) => a.riskLevel === riskFilter);
 
+  // Số liệu báo cáo đưa vào file PDF/Excel khi gửi từ trang Chẩn đoán
+  const diagnosisReportData = useMemo(() => {
+    const lines = [];
+    lines.push('Tổng quan chẩn đoán');
+    lines.push(`Số khu vực giám sát: ${mapAreas.length}`);
+    lines.push(`Cảnh báo nghiêm trọng: ${criticalCount} | Cảnh báo cần theo dõi: ${warningCount}`);
+    if (topRiskAreas.length > 0) {
+      const byRisk = topRiskAreas.reduce((acc, a) => {
+        const r = a.riskLevel || 'Khác';
+        acc[r] = (acc[r] || 0) + 1;
+        return acc;
+      }, {});
+      lines.push('Phân bố rủi ro: ' + Object.entries(byRisk).map(([k, v]) => `${k}: ${v}`).join(' | '));
+    }
+    if (selectedArea) {
+      const config = RISK_CONFIG[selectedArea.riskLevel] || RISK_CONFIG.Medium;
+      const recs = RECOMMENDATIONS[selectedArea.riskLevel] || RECOMMENDATIONS.Medium;
+      lines.push('');
+      lines.push('Khu vực đang chọn');
+      lines.push(`Khu vực: ${selectedArea.areaName} (${selectedArea.districtName})`);
+      lines.push(`Mức rủi ro: ${config.label}`);
+      lines.push(`Tốc độ sụt lún TB: ${selectedArea.avgSubsidenceRate} mm/năm`);
+      if (selectedArea.cumulativeSubsidence != null) lines.push(`Sụt lún tích lũy: ${selectedArea.cumulativeSubsidence} mm`);
+      lines.push('Khuyến nghị:');
+      recs.forEach((r, i) => lines.push(`  ${i + 1}. ${r}`));
+      if (alertsForSelected.length > 0) {
+        lines.push('Cảnh báo liên quan:');
+        alertsForSelected.slice(0, 5).forEach((a) => lines.push(`  - ${a.title} (${a.severity})`));
+      }
+    }
+    if (rainfallData && rainfallData.length > 0) {
+      lines.push('');
+      lines.push(`Lượng mưa (${rainfallPastDays} ngày qua):`);
+      rainfallData.forEach((r) => lines.push(`  ${r.districtName}: ${r.totalMm?.toFixed(1) ?? '-'} mm`));
+    }
+    return lines.join('\n');
+  }, [mapAreas.length, criticalCount, warningCount, topRiskAreas, selectedArea, alertsForSelected, rainfallData, rainfallPastDays]);
+
   // Xuất báo cáo chẩn đoán (tải file TXT)
   const handleExportReport = () => {
     if (!selectedArea) {
@@ -334,6 +373,7 @@ ${alertsHtml}
           <Paragraph className="diagnosis-hero-desc">
             Đánh giá nhanh mức độ rủi ro sụt lún theo từng khu vực dựa trên dữ liệu quan trắc và cảnh báo. Chọn một khu vực bên dưới để xem chi tiết và khuyến nghị.
           </Paragraph>
+          <SendReportButton sourcePageName="Chẩn đoán" type="default" reportData={diagnosisReportData} />
         </div>
         <div className="diagnosis-hero-stats">
           <Statistic
