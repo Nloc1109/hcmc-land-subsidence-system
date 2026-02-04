@@ -14,6 +14,7 @@ import {
   UserOutlined,
   FileTextOutlined,
   SettingOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth/useAuthStore';
 import CookieConsent from '../components/CookieConsent';
@@ -55,35 +56,74 @@ const MainLayout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  const isAdmin = user?.role === 'Admin';
+  // Lấy role từ user (hỗ trợ cả camelCase và PascalCase)
+  // Backend trả về 'role', nhưng cũng hỗ trợ 'roleName' để tương thích
+  const userRole = user?.role || user?.roleName || user?.RoleName;
+  const isAdmin = userRole === 'Admin';
+  const isAnalyst = userRole === 'Analyst';
+  const isViewer = userRole === 'Viewer';
+  const isOperator = userRole === 'Operator';
+  const isManager = userRole === 'Manager';
   
   const menuItems = isAuthenticated
     ? [
+        // Tất cả role đều có Trang chủ
         {
           key: '/',
           icon: <HomeOutlined />,
           label: 'Trang chủ',
         },
-        {
-          key: '/reports',
-          icon: <BarChartOutlined />,
-          label: 'Báo cáo',
-        },
-        {
-          key: '/news',
-          icon: <NotificationOutlined />,
-          label: 'Tin tức',
-        },
-        {
-          key: '/diagnosis',
-          icon: <SearchOutlined />,
-          label: 'Chuẩn đoán',
-        },
-        {
-          key: '/ai-prediction',
-          icon: <RobotOutlined />,
-          label: 'AI dự đoán thiên tai',
-        },
+        // Viewer, Manager, Analyst, Admin: Tin tức
+        ...((isViewer || isManager || isAnalyst || isAdmin)
+          ? [
+              {
+                key: '/news',
+                icon: <NotificationOutlined />,
+                label: 'Tin tức',
+              },
+            ]
+          : []),
+        // Manager, Analyst, Admin: Báo cáo
+        ...((isManager || isAnalyst || isAdmin)
+          ? [
+              {
+                key: '/reports',
+                icon: <BarChartOutlined />,
+                label: 'Báo cáo',
+              },
+            ]
+          : []),
+        // Operator, Manager, Admin: Chẩn đoán
+        ...((isOperator || isManager || isAdmin)
+          ? [
+              {
+                key: '/diagnosis',
+                icon: <SearchOutlined />,
+                label: 'Chẩn đoán',
+              },
+            ]
+          : []),
+        // Operator, Manager, Admin: AI Dự đoán
+        ...((isOperator || isManager || isAdmin)
+          ? [
+              {
+                key: '/ai-prediction',
+                icon: <RobotOutlined />,
+                label: 'AI dự đoán thiên tai',
+              },
+            ]
+          : []),
+        // Analyst, Admin: Phân tích chuyên sâu
+        ...((isAnalyst || isAdmin)
+          ? [
+              {
+                key: '/analysis',
+                icon: <GlobalOutlined />,
+                label: 'Phân tích chuyên sâu',
+              },
+            ]
+          : []),
+        // Admin: Quản trị
         ...(isAdmin
           ? [
               {
@@ -120,6 +160,7 @@ const MainLayout = () => {
     const path = location.pathname;
     if (path.startsWith('/admin/users')) return ['/admin/users'];
     if (path.startsWith('/admin/login-logs')) return ['/admin/login-logs'];
+    if (path.startsWith('/analysis')) return ['/analysis'];
     return [path];
   };
 
