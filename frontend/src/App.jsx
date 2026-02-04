@@ -13,7 +13,9 @@ import DiagnosisPage from './pages/diagnosis/Diagnosis';
 import AiPredictionPage from './pages/ai/AiPrediction';
 import UserManagementPage from './pages/admin/UserManagement';
 import LoginLogsPage from './pages/admin/LoginLogs';
+import RequestManagementPage from './pages/admin/RequestManagement';
 import DeepAnalysisPage from './pages/analysis/DeepAnalysis';
+import MyRequestsPage from './pages/MyRequests';
 import './styles/App.css';
 
 function App() {
@@ -55,10 +57,16 @@ function App() {
                 <Route path="ai-prediction" element={<AiPredictionPage />} />
               </Route>
               
+              {/* Yêu cầu: Tất cả roles trừ Viewer */}
+              <Route element={<RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Analyst', 'Operator']} />}>
+                <Route path="my-requests" element={<MyRequestsPage />} />
+              </Route>
+              
               {/* Admin: Tất cả chức năng */}
               <Route element={<RoleBasedRoute allowedRoles={['Admin']} />}>
                 <Route path="admin/users" element={<UserManagementPage />} />
                 <Route path="admin/login-logs" element={<LoginLogsPage />} />
+                <Route path="admin/requests" element={<RequestManagementPage />} />
               </Route>
             </Route>
           </Route>

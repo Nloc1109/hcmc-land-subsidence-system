@@ -1,0 +1,13 @@
+.page-container {
+  padding: 24px;
+  background: transparent;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin-bottom: 8px;
+}
+
