@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider, App as AntdApp, theme } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import App from './App';
 import './styles/index.css';
@@ -33,7 +33,9 @@ const lightTheme = {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ConfigProvider theme={lightTheme} locale={viVN}>
-      <App />
+      <AntdApp>
+        <App />
+      </AntdApp>
     </ConfigProvider>
   </React.StrictMode>
 );

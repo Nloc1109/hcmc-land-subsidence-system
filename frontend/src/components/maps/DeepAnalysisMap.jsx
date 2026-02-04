@@ -167,7 +167,7 @@ const DeepAnalysisMap = ({ areas = [], height = '600px' }) => {
       try {
         setLoadingAI(true);
         setAiError(null);
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
         const areaForAI = area?.districtName || area?.areaName || '';
         const res = await axios.post(
           `${baseUrl}/ai/predict`,
