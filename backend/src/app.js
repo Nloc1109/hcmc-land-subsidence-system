@@ -12,6 +12,8 @@ import alertsRouter from './routes/alerts.js';
 import devicesRouter from './routes/devices.js';
 import usersRouter from './routes/users.js';
 import auditLogsRouter from './routes/audit-logs.js';
+import monitoringAreasRouter from './routes/monitoring-areas.js';
+import areasRouter from './routes/areas.js';
 
 dotenv.config();
 
@@ -63,6 +65,13 @@ app.use('/api/v1/users', usersRouter);
 
 // Audit logs routes (Admin only)
 app.use('/api/v1/audit-logs', auditLogsRouter);
+
+// Monitoring areas routes
+app.use('/api/v1/monitoring-areas', monitoringAreasRouter);
+
+// Areas routes
+app.use('/api/v1/areas', areasRouter);
+
 
 // Health check (giữ lại cả endpoint cũ lẫn mới nếu cần về sau)
 app.get('/api/health', (req, res) => {
