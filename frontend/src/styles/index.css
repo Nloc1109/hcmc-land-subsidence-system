@@ -105,6 +105,3 @@ a {
 a:hover {
   color: var(--accent-hover);
 }
-/* Import common page styles */
-@import './pages.css';
-
