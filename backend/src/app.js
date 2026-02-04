@@ -173,7 +173,7 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
       });
     }
 
-    console.log(`📰 Đã tải ${parsed.items.length} tin tức`);
+    console.log(`📰 Đã tải ${parsed.items.length} tin tức trong ${elapsedTime}ms`);
     res.json({
       items: parsed.items,
       generatedAt: new Date().toISOString(),
@@ -188,130 +188,6 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
     });
     res.status(500).json({
       message: 'Không lấy được tin tức từ OpenAI.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
-  }
-});
-
-/**
- * POST /api/ai/predict
- * Dự đoán thiên tai cho một khu vực cụ thể trong 1, 2, 5 năm tới
- */
-app.post('/api/ai/predict', async (req, res) => {
-  try {
-    if (!openaiClient) {
-      return res.status(500).json({
-        message: 'OPENAI_API_KEY chưa cấu hình. Không thể thực hiện dự đoán.',
-      });
-    }
-
-    const { area } = req.body;
-    if (!area) {
-      return res.status(400).json({
-        message: 'Vui lòng chọn khu vực cần dự đoán.',
-      });
-    }
-
-    console.log(`🔄 Đang phân tích và dự đoán thiên tai cho khu vực: ${area}`);
-    const startTime = Date.now();
-
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout after 90 seconds')), 90000);
-    });
-
-    const completionPromise = openaiClient.chat.completions.create({
-      model: 'gpt-4o',
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 4000,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Bạn là chuyên gia dự báo thiên tai và phân tích rủi ro môi trường cho khu vực Thành phố Hồ Chí Minh, Việt Nam. Bạn có kiến thức sâu về địa chất, khí hậu, địa hình và các yếu tố ảnh hưởng đến thiên tai.',
-        },
-        {
-          role: 'user',
-          content: `
-Hãy phân tích và dự đoán các khả năng thiên tai cho khu vực "${area}" (thuộc Thành phố Hồ Chí Minh, Việt Nam) trong các khoảng thời gian: 1 năm, 2 năm, và 5 năm tới.
-
-Các loại thiên tai cần phân tích bao gồm:
-- Sụt lún đất (land subsidence)
-- Ngập lụt (flooding)
-- Lũ quét (flash flood)
-- Sạt lở đất (landslide)
-- Triều cường (storm surge)
-- Mưa lớn kéo dài (prolonged heavy rain)
-- Hạn hán (drought)
-- Xâm nhập mặn (saltwater intrusion)
-- Các thiên tai khác có thể xảy ra
-
-TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
-{
-  "area": "${area}",
-  "analysisDate": "YYYY-MM-DD",
-  "predictions": {
-    "oneYear": {
-      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
-      "disasters": [
-        {
-          "type": "Tên loại thiên tai (tiếng Việt)",
-          "probability": "Thấp | Trung bình | Cao",
-          "severity": "Nhẹ | Trung bình | Nghiêm trọng | Rất nghiêm trọng",
-          "description": "Mô tả chi tiết khả năng xảy ra, nguyên nhân, và tác động dự kiến (2-3 câu)",
-          "affectedAreas": "Các khu vực cụ thể có thể bị ảnh hưởng",
-          "preventionMeasures": "Các biện pháp phòng ngừa và ứng phó đề xuất"
-        }
-      ],
-      "summary": "Tóm tắt tổng quan về rủi ro thiên tai trong 1 năm tới (3-4 câu)"
-    },
-    "twoYears": {
-      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
-      "disasters": [...],
-      "summary": "Tóm tắt tổng quan về rủi ro thiên tai trong 2 năm tới"
-    },
-    "fiveYears": {
-      "overallRisk": "Thấp | Trung bình | Cao | Rất cao",
-      "disasters": [...],
-      "summary": "Tóm tắt tổng quan về rủi ro thiên tai trong 5 năm tới"
-    }
-  },
-  "recommendations": [
-    "Khuyến nghị 1 về phòng ngừa và ứng phó",
-    "Khuyến nghị 2",
-    "Khuyến nghị 3"
-  ]
-}
-
-Lưu ý: Phân tích dựa trên đặc điểm địa lý, địa chất, khí hậu thực tế của khu vực ${area} và xu hướng biến đổi khí hậu. Đưa ra dự đoán hợp lý và có cơ sở khoa học.
-`.trim(),
-        },
-      ],
-    });
-
-    const completion = await Promise.race([completionPromise, timeoutPromise]);
-    const raw = completion.choices[0]?.message?.content;
-    const elapsedTime = Date.now() - startTime;
-    console.log(`✅ Đã hoàn thành phân tích trong ${elapsedTime}ms`);
-
-    const parsed = JSON.parse(raw);
-    
-    // Validate structure
-    if (!parsed.predictions || !parsed.predictions.oneYear || !parsed.predictions.twoYears || !parsed.predictions.fiveYears) {
-      return res.status(500).json({
-        message: 'Định dạng JSON từ OpenAI không hợp lệ.',
-      });
-    }
-
-    res.json({
-      ...parsed,
-      processingTime: `${elapsedTime}ms`,
-      generatedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error('Error in /api/ai/predict:', error);
-    res.status(500).json({
-      message: 'Không thể thực hiện dự đoán. Vui lòng thử lại sau.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
