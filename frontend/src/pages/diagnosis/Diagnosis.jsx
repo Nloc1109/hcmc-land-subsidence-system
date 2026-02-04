@@ -427,6 +427,40 @@ ${alertsHtml}
     message.success('Đã mở hộp thoại in.');
   };
 
+  // Lấy lượng mưa từ Open-Meteo theo quận (past_days + hourly=precipitation)
+  const handleLoadRainfall = async () => {
+    setRainfallLoading(true);
+    setRainfallData([]);
+    try {
+      const results = await Promise.all(
+        DISTRICTS_RAINFALL.map(async (d) => {
+          const url = `${OPEN_METEO_BASE}?latitude=${d.lat}&longitude=${d.lon}&past_days=${rainfallPastDays}&hourly=precipitation`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          const times = json.hourly?.time || [];
+          const precip = json.hourly?.precipitation || [];
+          const totalMm = precip.reduce((sum, v) => sum + (Number(v) || 0), 0);
+          const avgPerDay = times.length > 0 ? totalMm / rainfallPastDays : 0;
+          return {
+            districtName: d.name,
+            totalMm: Math.round(totalMm * 10) / 10,
+            avgPerDayMm: Math.round(avgPerDay * 10) / 10,
+            days: rainfallPastDays,
+          };
+        })
+      );
+      setRainfallData(results);
+      message.success(`Đã tải lượng mưa ${rainfallPastDays} ngày qua cho ${results.length} quận.`);
+    } catch (err) {
+      console.error('Error fetching rainfall:', err);
+      message.error('Không tải được dữ liệu mưa từ Open-Meteo. Vui lòng thử lại.');
+      setRainfallData([]);
+    } finally {
+      setRainfallLoading(false);
+    }
+  };
+
   // Bước hiện tại trong quy trình: 0 = chưa chọn, 1 = đã chọn (đang xem), 2 = đã xem kết luận
   const processCurrentStep = selectedArea ? 2 : 0;
 
@@ -920,6 +954,72 @@ ${alertsHtml}
           ]}
         />
       </Card>
+
+      {/* Thống kê lượng mưa trung bình theo quận (Open-Meteo) */}
+      <Card className="diagnosis-card diagnosis-rainfall-card" bordered={false} style={{ marginTop: 24 }}>
+        <div className="diagnosis-card-header">
+          <CloudOutlined className="diagnosis-card-icon" />
+          <span>Thống kê lượng mưa trung bình theo quận</span>
+        </div>
+        <Paragraph type="secondary" className="diagnosis-list-hint">
+          Dữ liệu lượng mưa từ Open-Meteo theo tọa độ trung tâm từng quận. Chọn khoảng thời gian và bấm xem. Đơn vị: mm.
+        </Paragraph>
+        <div className="diagnosis-rainfall-actions">
+          <Select
+            value={rainfallPastDays}
+            onChange={setRainfallPastDays}
+            options={[
+              { label: '7 ngày qua', value: 7 },
+              { label: '14 ngày qua', value: 14 },
+            ]}
+            style={{ width: 160 }}
+          />
+          <Button
+            type="primary"
+            icon={<CloudOutlined />}
+            loading={rainfallLoading}
+            onClick={handleLoadRainfall}
+          >
+            Xem thống kê lượng mưa theo quận
+          </Button>
+        </div>
+        {rainfallData.length > 0 && (
+          <Table
+            size="small"
+            dataSource={rainfallData}
+            rowKey="districtName"
+            pagination={false}
+            columns={[
+              { title: 'Quận / Huyện', dataIndex: 'districtName', key: 'districtName', width: 140 },
+              { title: 'Tổng lượng mưa (mm)', dataIndex: 'totalMm', key: 'totalMm', align: 'right', render: (v) => v.toFixed(1) },
+              { title: 'Trung bình/ngày (mm)', dataIndex: 'avgPerDayMm', key: 'avgPerDayMm', align: 'right', render: (v) => v.toFixed(1) },
+              { title: 'Khoảng thời gian', key: 'days', render: (_, r) => `${r.days} ngày qua` },
+            ]}
+            style={{ marginTop: 16 }}
+          />
+        )}
+      </Card>
+
+      {/* Phân bố mức rủi ro + xu hướng sụt lún (đặt dưới quy trình chẩn đoán) */}
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+        <Col xs={24} md={12}>
+          <RiskDistributionChart
+            areas={topRiskAreas.length > 0 ? topRiskAreas : mapAreas}
+            title="Phân bố khu vực theo mức rủi ro"
+          />
+        </Col>
+        <Col xs={24} md={12}>
+          {trendData.length > 0 ? (
+            <SubsidenceChart data={trendData} title="Xu hướng sụt lún (30 ngày)" />
+          ) : (
+            <Card className="diagnosis-card" bordered={false} title="Xu hướng sụt lún (30 ngày)">
+              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Spin tip="Đang tải dữ liệu..." />
+              </div>
+            </Card>
+          )}
+        </Col>
+      </Row>
     </div>
   );
 };

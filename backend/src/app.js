@@ -12,6 +12,8 @@ import alertsRouter from './routes/alerts.js';
 import devicesRouter from './routes/devices.js';
 import usersRouter from './routes/users.js';
 import auditLogsRouter from './routes/audit-logs.js';
+import monitoringAreasRouter from './routes/monitoring-areas.js';
+import areasRouter from './routes/areas.js';
 
 dotenv.config();
 
@@ -64,6 +66,13 @@ app.use('/api/v1/users', usersRouter);
 // Audit logs routes (Admin only)
 app.use('/api/v1/audit-logs', auditLogsRouter);
 
+// Monitoring areas routes
+app.use('/api/v1/monitoring-areas', monitoringAreasRouter);
+
+// Areas routes
+app.use('/api/v1/areas', areasRouter);
+
+
 // Health check (giữ lại cả endpoint cũ lẫn mới nếu cần về sau)
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, service: 'hcmc-land-subsidence-backend' });
@@ -91,10 +100,14 @@ app.get('/api/db-test', async (req, res) => {
  */
 // OpenAI client (chỉ khởi tạo nếu có API key)
 let openaiClient = null;
-if (process.env.OPENAI_API_KEY) {
+const openaiApiKey = process.env.OPENAI_API_KEY?.trim();
+if (openaiApiKey) {
   openaiClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: openaiApiKey,
   });
+  console.log('✅ OpenAI client initialized');
+} else {
+  console.warn('⚠️  OPENAI_API_KEY not found in environment variables');
 }
 
 /**
@@ -132,16 +145,22 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
       "publishedAt": "YYYY-MM-DD",
       "location": "TP.HCM | Hà Nội | Đồng bằng sông Cửu Long | Miền Trung | ...",
       "summary": "Đoạn tóm tắt 2–3 câu tiếng Việt, tập trung vào vấn đề sụt lún/ngập và nguyên nhân/chỉ số chính.",
-      "url": "https://duong-dan-toi-bai-bao-hoac-nguon-tham-khao",
+      "url": "https://vnexpress.net/...",
       "tags": ["sụt lún", "HCM", "..."]
     }
   ]
 }
 `.trim();
 
-    const completion = await openaiClient.chat.completions.create({
-      model: 'gpt-4.1',
+    const startTime = Date.now();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
+    });
+    const completionPromise = openaiClient.chat.completions.create({
+      model: 'gpt-4o',
       response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 3000,
       messages: [
         {
           role: 'system',
@@ -152,6 +171,9 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
       ],
     });
 
+    const completion = await Promise.race([completionPromise, timeoutPromise]);
+    const elapsedTime = Date.now() - startTime;
+
     const raw = completion.choices[0]?.message?.content;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed.items)) {
@@ -160,14 +182,22 @@ TRẢ VỀ DUY NHẤT MỘT JSON OBJECT có dạng:
       });
     }
 
+    console.log(`📰 Đã tải ${parsed.items.length} tin tức trong ${elapsedTime}ms`);
     res.json({
       items: parsed.items,
       generatedAt: new Date().toISOString(),
+      processingTime: `${elapsedTime}ms`,
     });
   } catch (error) {
     console.error('Error in /api/news/subsidence:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+    });
     res.status(500).json({
       message: 'Không lấy được tin tức từ OpenAI.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 });

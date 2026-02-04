@@ -30,9 +30,11 @@ const LoginPage = () => {
       }
 
       // Cập nhật trạng thái đăng nhập trong store
-      login({
-        username: data?.user?.username || values.username,
-        role: data?.user?.roleName || data?.user?.role || 'Người dùng',
+      // Lưu toàn bộ user object từ backend để đảm bảo có đầy đủ thông tin
+      login(data?.user || {
+        username: values.username,
+        role: 'User',
+        roleName: 'User',
       });
       message.success('Đăng nhập thành công!');
       navigate('/');
